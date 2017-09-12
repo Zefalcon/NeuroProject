@@ -72,7 +72,7 @@ Transform:
   m_GameObject: {fileID: 1230793165172250}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_Children:
   - {fileID: 4867555291587382}
   m_Father: {fileID: 0}
@@ -204,6 +204,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 154d389d55074054b8ede1ed5de01d63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  connectionsToOthers: []
+  manager: {fileID: 0}
 --- !u!114 &114157916710512398
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -215,7 +217,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a9763968e56cec418d491513cb89122, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  connectionPrefab: {fileID: 1100663823996510, guid: 345118c58a0a69248a55fe7d58dab7c9,
+  excitatoryConnectionPrefab: {fileID: 1100663823996510, guid: 345118c58a0a69248a55fe7d58dab7c9,
+    type: 2}
+  inhibitoryConnectionPrefab: {fileID: 1822659462763902, guid: 26f04cb288304514b93af9b0633d70a3,
     type: 2}
 --- !u!114 &114512632014812120
 MonoBehaviour:

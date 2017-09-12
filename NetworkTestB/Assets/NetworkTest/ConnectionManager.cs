@@ -6,7 +6,8 @@ using UnityEngine.Networking;
 public class ConnectionManager : NetworkBehaviour {
 
 	Controller cubeInstance;
-	public GameObject connectionPrefab;
+	public GameObject excitatoryConnectionPrefab;
+	public GameObject inhibitoryConnectionPrefab;
 
 	// Use this for initialization
 	void Start () {
@@ -22,6 +23,7 @@ public class ConnectionManager : NetworkBehaviour {
 			return;
 		}
 
+		//Left click creates excitatory connection
 		if (Input.GetMouseButtonUp(0)) {
 			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 			RaycastHit hit;
@@ -37,7 +39,7 @@ public class ConnectionManager : NetworkBehaviour {
 					GameObject existingConnection = GameObject.Find("NetworkManager/Connection: " + cubeInstance.transform.gameObject.name + "->" + hit.transform.gameObject.name);
 					if (existingConnection == null) {
 						//Proceed
-						CmdAskSpawnConnection(cubeInstance.transform.gameObject, hit.transform.gameObject);
+						CmdAskSpawnConnection(cubeInstance.transform.gameObject, hit.transform.gameObject, true);
 					}
 				}
 				//Check if connection
@@ -48,6 +50,27 @@ public class ConnectionManager : NetworkBehaviour {
 						toDelete.GetEnd().Equals(cubeInstance.transform.gameObject)) {
 						//Send delete request
 						AskDeleteConnection(toDelete.gameObject);
+					}
+				}
+			}
+		}
+		//Right click creates inhibitory connection
+		else if (Input.GetMouseButtonUp(1)) {
+			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+			RaycastHit hit;
+
+			if (Physics.Raycast(ray, out hit, 100)) {
+				//Check if cube
+				if (hit.transform.gameObject.GetComponent<Controller>() != null) {
+					if (hit.transform.gameObject.Equals(cubeInstance.transform.gameObject)) {
+						//Same object; don't form connection
+						return;
+					}
+					//Check if connection already exists
+					GameObject existingConnection = GameObject.Find("NetworkManager/Connection: " + cubeInstance.transform.gameObject.name + "->" + hit.transform.gameObject.name);
+					if (existingConnection == null) {
+						//Proceed
+						CmdAskSpawnConnection(cubeInstance.transform.gameObject, hit.transform.gameObject, false);
 					}
 				}
 			}
@@ -69,6 +92,12 @@ public class ConnectionManager : NetworkBehaviour {
 
 	[ClientRpc]
 	void RpcSpawnConnection(GameObject start, GameObject end, GameObject connection) {
+		if (cubeInstance) {
+			if (start.Equals(cubeInstance.gameObject)) {
+				//If this connection starts from your cube, add it to the appropriate list
+				cubeInstance.connectionsToOthers.Add(connection.GetComponent<Connection>());
+			}
+		}
 		connection.GetComponent<Connection>().SetPoints(start, end);
 		LineRenderer lr = connection.GetComponent<LineRenderer>();
 		lr.SetPosition(0, start.transform.position);
@@ -76,8 +105,8 @@ public class ConnectionManager : NetworkBehaviour {
 	}
 
 	[Command]
-	void CmdAskSpawnConnection(GameObject start, GameObject end) {
-		TargetConnectionRequest(end.GetComponent<Controller>().connectionToClient, start, end);
+	void CmdAskSpawnConnection(GameObject start, GameObject end, bool isExcitatory) {
+		TargetConnectionRequest(end.GetComponent<Controller>().connectionToClient, start, end, isExcitatory);
 		TargetWaitForResponse(start.GetComponent<Controller>().connectionToClient);
 		//NetworkServer.Spawn(con);
 		//RpcSpawnConnection(start, end, con);
@@ -100,23 +129,29 @@ public class ConnectionManager : NetworkBehaviour {
 	}
 
 	[TargetRpc]
-	void TargetConnectionRequest(NetworkConnection network, GameObject start, GameObject end) {
+	void TargetConnectionRequest(NetworkConnection network, GameObject start, GameObject end, bool isExcitatory) {
 		//Receiver accepts connection
 		//Bring up interface for user to decide whether to connect
-		GameObject.Find("UIManager").GetComponent<UIManager>().OpenAcceptConnectionBox(start, end, start.GetComponent<Controller>().connectionToClient);
+		GameObject.Find("UIManager").GetComponent<UIManager>().OpenAcceptConnectionBox(start, end, start.GetComponent<Controller>().connectionToClient, isExcitatory);
 		//CmdAcceptConnection(start, end);
 	}
 
-	public void AcceptConnection(GameObject start, GameObject end, string strength) {
+	public void AcceptConnection(GameObject start, GameObject end, string strength, bool isExcitatory) {
 		if (isLocalPlayer) {
 			//Don't want to send multiple times, probably.  Super double check.
-			CmdAcceptConnection(start, end, strength);
+			CmdAcceptConnection(start, end, strength, isExcitatory);
 		}
 	}
 
 	[Command]
-	void CmdAcceptConnection(GameObject start, GameObject end, string strength) {
-		GameObject con = Instantiate(connectionPrefab);
+	void CmdAcceptConnection(GameObject start, GameObject end, string strength, bool isExcitatory) {
+		GameObject con;
+		if (isExcitatory) {
+			con = Instantiate(excitatoryConnectionPrefab);
+		}
+		else {
+			con = Instantiate(inhibitoryConnectionPrefab);
+		}
 		float str;
 		if(float.TryParse(strength, out str)) {
 			con.GetComponent<Connection>().connectionStrength = str;
@@ -126,7 +161,7 @@ public class ConnectionManager : NetworkBehaviour {
 			con.GetComponent<Connection>().connectionStrength = 1;
 		}
 		con.name = "Connection: " + start.name + "->" + end.name;
-		con.transform.SetParent(GameObject.Find("NetworkManager").transform); //TODO: Doesn't fix problem of connections disappearing upon reconnection.  Must spend time on this.
+		con.transform.SetParent(GameObject.Find("NewNetworkManager").transform); //TODO: Doesn't fix problem of connections disappearing upon reconnection.  Must spend time on this.
 		NetworkServer.Spawn(con);
 		RpcSpawnConnection(start, end, con);
 	}

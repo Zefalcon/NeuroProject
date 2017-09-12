@@ -7,7 +7,11 @@ public class Controller : NetworkBehaviour {
 
 	private Color changedColor;
 	private Color defaultColor;
-	
+	private Color postConnectionColor;
+	private GameObject tableSelector;
+
+	public List<Connection> connectionsToOthers;
+	public TableSpawnNetworkManager manager;
 
 	[SyncVar]
 	private Color currentColor;
@@ -17,14 +21,33 @@ public class Controller : NetworkBehaviour {
 		defaultColor = this.GetComponent<MeshRenderer>().material.color;
 		currentColor = defaultColor;
 		changedColor = Color.green;
+		postConnectionColor = Color.yellow;
+
+		if (isLocalPlayer) {
+			manager = GameObject.FindObjectOfType<TableSpawnNetworkManager>();
+			transform.position = manager.GetSpawnPosition();
+			/*if (GameObject.Find("TableSelectionArea")) {
+				tableSelector = GameObject.Find("TableSelectionArea");
+				tableSelector.SetActive(false);
+				//GameObject.Find("TableSelectionArea").SetActive(false);
+			}*/
+		}
 	}
-	
+
+	private void OnDestroy() {
+		//GameObject.Find("TableSelectionArea").SetActive(true);
+		//tableSelector.SetActive(true);
+	}
+
 	// Update is called once per frame
 	void Update () {
 
 		if (!isLocalPlayer) {
 			return;
 		}
+
+		//TODO: See if this works reasonably well.
+		Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, Camera.main.transform.position.z);
 
 		if (Input.GetKeyDown(KeyCode.Space)) {
 			if (currentColor.Equals(defaultColor)){
@@ -36,6 +59,9 @@ public class Controller : NetworkBehaviour {
 		}
 
 		CmdColorChange(transform.gameObject, currentColor);
+		for(int i = 0; i < connectionsToOthers.Capacity; i++) {
+			CmdColorChange(connectionsToOthers[i].GetEnd(), postConnectionColor);
+		}
 
 		var x = Input.GetAxis("Horizontal") * Time.deltaTime * 3.0f;
 		var y = Input.GetAxis("Vertical") * Time.deltaTime * 3.0f;

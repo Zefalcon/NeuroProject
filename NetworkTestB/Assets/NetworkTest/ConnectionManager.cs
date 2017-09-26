@@ -18,7 +18,6 @@ public class ConnectionManager : NetworkBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		//Testing
 		if (!isLocalPlayer) {
 			return;
 		}
@@ -91,13 +90,9 @@ public class ConnectionManager : NetworkBehaviour {
 	}
 
 	[ClientRpc]
-	void RpcSpawnConnection(GameObject start, GameObject end, GameObject connection) {
-		if (cubeInstance) {
-			if (start.Equals(cubeInstance.gameObject)) {
-				//If this connection starts from your cube, add it to the appropriate list
-				cubeInstance.connectionsToOthers.Add(connection.GetComponent<Connection>());
-			}
-		}
+	void RpcSpawnConnection(GameObject start, GameObject end, GameObject connection, float strength) {
+		connection.GetComponent<Connection>().connectionStrength = strength;
+		start.GetComponent<Controller>().connectionsToOthers.Add(connection.GetComponent<Connection>());
 		connection.GetComponent<Connection>().SetPoints(start, end);
 		LineRenderer lr = connection.GetComponent<LineRenderer>();
 		lr.SetPosition(0, start.transform.position);
@@ -108,8 +103,6 @@ public class ConnectionManager : NetworkBehaviour {
 	void CmdAskSpawnConnection(GameObject start, GameObject end, bool isExcitatory) {
 		TargetConnectionRequest(end.GetComponent<Controller>().connectionToClient, start, end, isExcitatory);
 		TargetWaitForResponse(start.GetComponent<Controller>().connectionToClient);
-		//NetworkServer.Spawn(con);
-		//RpcSpawnConnection(start, end, con);
 	}
 
 	[TargetRpc]
@@ -163,6 +156,6 @@ public class ConnectionManager : NetworkBehaviour {
 		con.name = "Connection: " + start.name + "->" + end.name;
 		con.transform.SetParent(GameObject.Find("NewNetworkManager").transform); //TODO: Doesn't fix problem of connections disappearing upon reconnection.  Must spend time on this.
 		NetworkServer.Spawn(con);
-		RpcSpawnConnection(start, end, con);
+		RpcSpawnConnection(start, end, con, str);
 	}
 }

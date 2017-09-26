@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public class Connection : MonoBehaviour {
 
@@ -34,18 +35,16 @@ public class Connection : MonoBehaviour {
 			float length = Vector3.Distance(start, end);
 			float angle = Mathf.Atan2((end.y - start.y), (end.x - start.x));
 			angle *= Mathf.Rad2Deg;
-			//angle *= -1;
 
 			box.transform.position = colliderPt;
 			box.size = new Vector3(length, width, .1f);
 			box.transform.rotation = Quaternion.Euler(0, 0, angle);
-			//box.transform.Rotate(0, 0, angle);
 		}
 
 		if(setUp && (startPt == null || endPt == null)) {
 			//One of the endpoints has been destroyed.  Destroy this.
 			//TODO: Eventually, save connection and try to restore when user reconnects.
-			Destroy(this.gameObject);
+			NetworkServer.Destroy(this.gameObject);
 		}
 	}
 

@@ -1,0 +1,185 @@
+Initialize engine version: 5.6.2f1 (a2913c821e27)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce GTX 970M   (ID=0x1618)
+    Vendor:   NVIDIA
+    VRAM:     2989 MB
+    Driver:   10.18.13.5384
+Begin MonoManager ReloadAssembly
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.4.0_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.4.0_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.4.0_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.4.0_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.4.0_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.4.0_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.4.0_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.4.0_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.4.0_Data\Managed\UnityEngine.Analytics.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.4.0_Data\Managed\UnityEngine.Analytics.dll into Unity Child Domain
+- Completed reload, in  0.018 seconds
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.4.0_Data\Managed\System.Core.dll (this message is harmless)
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.4.0_Data\Managed\System.dll (this message is harmless)
+desktop: 1920x1080 75Hz; virtual: 1920x1080 at 0,0
+<RI> Initializing input.
+<RI> Input initialized.
+<RI> Initialized touch support.
+UnloadTime: 1.508365 ms
+Setting up 4 worker threads for Enlighten.
+  Thread -> id: e8c -> priority: 1 
+  Thread -> id: 760 -> priority: 1 
+  Thread -> id: 2cdc -> priority: 1 
+  Thread -> id: 2988 -> priority: 1 
+Log: connection {3} has been disconnected by timeout; address {::ffff:172.19.37.125:58651} time {289331}, last rec time {286820} rtt {14} timeout {2000}
+ServerDisconnected due to error: Timeout
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+Log: connection {2} has been disconnected by timeout; address {::ffff:172.19.36.131:53390} time {319219}, last rec time {317213} rtt {13} timeout {2000}
+ServerDisconnected due to error: Timeout
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+NullReferenceException
+  at (wrapper managed-to-native) UnityEngine.Object:get_name ()
+  at ConnectionManager.CmdAcceptConnection (UnityEngine.GameObject start, UnityEngine.GameObject end, System.String strength, Boolean isExcitatory) [0x00000] in <filename unknown>:0 
+  at ConnectionManager.CallCmdAcceptConnection (UnityEngine.GameObject start, UnityEngine.GameObject end, System.String strength, Boolean isExcitatory) [0x00000] in <filename unknown>:0 
+  at ConnectionManager.AcceptConnection (UnityEngine.GameObject start, UnityEngine.GameObject end, System.String strength, Boolean isExcitatory) [0x00000] in <filename unknown>:0 
+  at UIManager.ApplyAcceptConnection (UnityEngine.UI.Text strength) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.InvokableCall`1[UnityEngine.UI.Text].Invoke (System.Object[] args) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.CachedInvokableCall`1[UnityEngine.UI.Text].Invoke (System.Object[] args) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.InvokableCallList.Invoke (System.Object[] parameters) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.UnityEventBase.Invoke (System.Object[] parameters) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.UnityEvent.Invoke () [0x00000] in <filename unknown>:0 
+  at UnityEngine.UI.Button.Press () [0x00000] in <filename unknown>:0 
+  at UnityEngine.UI.Button.OnPointerClick (UnityEngine.EventSystems.PointerEventData eventData) [0x00000] in <filename unknown>:0 
+  at UnityEngine.EventSystems.ExecuteEvents.Execute (IPointerClickHandler handler, UnityEngine.EventSystems.BaseEventData eventData) [0x00000] in <filename unknown>:0 
+  at UnityEngine.EventSystems.ExecuteEvents.Execute[IPointerClickHandler] (UnityEngine.GameObject target, UnityEngine.EventSystems.BaseEventData eventData, UnityEngine.EventSystems.EventFunction`1 functor) [0x00000] in <filename unknown>:0 
+UnityEngine.DebugLogHandler:Internal_LogException(Exception, Object)
+UnityEngine.DebugLogHandler:LogException(Exception, Object)
+UnityEngine.Logger:LogException(Exception, Object)
+UnityEngine.Debug:LogException(Exception)
+UnityEngine.EventSystems.ExecuteEvents:Execute(GameObject, BaseEventData, EventFunction`1)
+UnityEngine.EventSystems.StandaloneInputModule:ProcessMousePress(MouseButtonEventData)
+UnityEngine.EventSystems.StandaloneInputModule:ProcessMouseEvent(Int32)
+UnityEngine.EventSystems.StandaloneInputModule:ProcessMouseEvent()
+UnityEngine.EventSystems.StandaloneInputModule:Process()
+UnityEngine.EventSystems.EventSystem:Update()
+ 
+(Filename:  Line: -1)
+
+NullReferenceException
+  at (wrapper managed-to-native) UnityEngine.Object:get_name ()
+  at ConnectionManager.CmdAcceptConnection (UnityEngine.GameObject start, UnityEngine.GameObject end, System.String strength, Boolean isExcitatory) [0x00000] in <filename unknown>:0 
+  at ConnectionManager.CallCmdAcceptConnection (UnityEngine.GameObject start, UnityEngine.GameObject end, System.String strength, Boolean isExcitatory) [0x00000] in <filename unknown>:0 
+  at ConnectionManager.AcceptConnection (UnityEngine.GameObject start, UnityEngine.GameObject end, System.String strength, Boolean isExcitatory) [0x00000] in <filename unknown>:0 
+  at UIManager.ApplyAcceptConnection (UnityEngine.UI.Text strength) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.InvokableCall`1[UnityEngine.UI.Text].Invoke (System.Object[] args) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.CachedInvokableCall`1[UnityEngine.UI.Text].Invoke (System.Object[] args) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.InvokableCallList.Invoke (System.Object[] parameters) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.UnityEventBase.Invoke (System.Object[] parameters) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.UnityEvent.Invoke () [0x00000] in <filename unknown>:0 
+  at UnityEngine.UI.Button.Press () [0x00000] in <filename unknown>:0 
+  at UnityEngine.UI.Button.OnPointerClick (UnityEngine.EventSystems.PointerEventData eventData) [0x00000] in <filename unknown>:0 
+  at UnityEngine.EventSystems.ExecuteEvents.Execute (IPointerClickHandler handler, UnityEngine.EventSystems.BaseEventData eventData) [0x00000] in <filename unknown>:0 
+  at UnityEngine.EventSystems.ExecuteEvents.Execute[IPointerClickHandler] (UnityEngine.GameObject target, UnityEngine.EventSystems.BaseEventData eventData, UnityEngine.EventSystems.EventFunction`1 functor) [0x00000] in <filename unknown>:0 
+UnityEngine.DebugLogHandler:Internal_LogException(Exception, Object)
+UnityEngine.DebugLogHandler:LogException(Exception, Object)
+UnityEngine.Logger:LogException(Exception, Object)
+UnityEngine.Debug:LogException(Exception)
+UnityEngine.EventSystems.ExecuteEvents:Execute(GameObject, BaseEventData, EventFunction`1)
+UnityEngine.EventSystems.StandaloneInputModule:ProcessMousePress(MouseButtonEventData)
+UnityEngine.EventSystems.StandaloneInputModule:ProcessMouseEvent(Int32)
+UnityEngine.EventSystems.StandaloneInputModule:ProcessMouseEvent()
+UnityEngine.EventSystems.StandaloneInputModule:Process()
+UnityEngine.EventSystems.EventSystem:Update()
+ 
+(Filename:  Line: -1)
+
+NullReferenceException
+  at (wrapper managed-to-native) UnityEngine.Object:get_name ()
+  at ConnectionManager.CmdAcceptConnection (UnityEngine.GameObject start, UnityEngine.GameObject end, System.String strength, Boolean isExcitatory) [0x00000] in <filename unknown>:0 
+  at ConnectionManager.CallCmdAcceptConnection (UnityEngine.GameObject start, UnityEngine.GameObject end, System.String strength, Boolean isExcitatory) [0x00000] in <filename unknown>:0 
+  at ConnectionManager.AcceptConnection (UnityEngine.GameObject start, UnityEngine.GameObject end, System.String strength, Boolean isExcitatory) [0x00000] in <filename unknown>:0 
+  at UIManager.ApplyAcceptConnection (UnityEngine.UI.Text strength) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.InvokableCall`1[UnityEngine.UI.Text].Invoke (System.Object[] args) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.CachedInvokableCall`1[UnityEngine.UI.Text].Invoke (System.Object[] args) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.InvokableCallList.Invoke (System.Object[] parameters) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.UnityEventBase.Invoke (System.Object[] parameters) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Events.UnityEvent.Invoke () [0x00000] in <filename unknown>:0 
+  at UnityEngine.UI.Button.Press () [0x00000] in <filename unknown>:0 
+  at UnityEngine.UI.Button.OnPointerClick (UnityEngine.EventSystems.PointerEventData eventData) [0x00000] in <filename unknown>:0 
+  at UnityEngine.EventSystems.ExecuteEvents.Execute (IPointerClickHandler handler, UnityEngine.EventSystems.BaseEventData eventData) [0x00000] in <filename unknown>:0 
+  at UnityEngine.EventSystems.ExecuteEvents.Execute[IPointerClickHandler] (UnityEngine.GameObject target, UnityEngine.EventSystems.BaseEventData eventData, UnityEngine.EventSystems.EventFunction`1 functor) [0x00000] in <filename unknown>:0 
+UnityEngine.DebugLogHandler:Internal_LogException(Exception, Object)
+UnityEngine.DebugLogHandler:LogException(Exception, Object)
+UnityEngine.Logger:LogException(Exception, Object)
+UnityEngine.Debug:LogException(Exception)
+UnityEngine.EventSystems.ExecuteEvents:Execute(GameObject, BaseEventData, EventFunction`1)
+UnityEngine.EventSystems.StandaloneInputModule:ProcessMousePress(MouseButtonEventData)
+UnityEngine.EventSystems.StandaloneInputModule:ProcessMouseEvent(Int32)
+UnityEngine.EventSystems.StandaloneInputModule:ProcessMouseEvent()
+UnityEngine.EventSystems.StandaloneInputModule:Process()
+UnityEngine.EventSystems.EventSystem:Update()
+ 
+(Filename:  Line: -1)
+
+NullReferenceException: Object reference not set to an instance of an object
+  at Controller+<ColorChange>c__Iterator1.MoveNext () [0x00000] in <filename unknown>:0 
+  at UnityEngine.SetupCoroutine.InvokeMoveNext (IEnumerator enumerator, IntPtr returnValueAddress) [0x00000] in <filename unknown>:0 
+UnityEngine.MonoBehaviour:StartCoroutine(String, Object)
+Controller:RpcColorChange(GameObject, Color)
+Controller:InvokeRpcRpcColorChange(NetworkBehaviour, NetworkReader)
+UnityEngine.Networking.NetworkIdentity:HandleRPC(Int32, NetworkReader)
+UnityEngine.Networking.ClientScene:OnRPCMessage(NetworkMessage)
+UnityEngine.Networking.NetworkConnection:InvokeHandler(NetworkMessage)
+UnityEngine.Networking.LocalClient:ProcessInternalMessages()
+UnityEngine.Networking.LocalClient:Update()
+UnityEngine.Networking.NetworkClient:UpdateClients()
+UnityEngine.Networking.NetworkIdentity:UNetStaticUpdate()
+ 
+(Filename:  Line: -1)
+
+NullReferenceException: Object reference not set to an instance of an object
+  at Controller+<ColorChange>c__Iterator1.MoveNext () [0x00000] in <filename unknown>:0 
+  at UnityEngine.SetupCoroutine.InvokeMoveNext (IEnumerator enumerator, IntPtr returnValueAddress) [0x00000] in <filename unknown>:0 
+UnityEngine.MonoBehaviour:StartCoroutine(String, Object)
+Controller:RpcColorChange(GameObject, Color)
+Controller:InvokeRpcRpcColorChange(NetworkBehaviour, NetworkReader)
+UnityEngine.Networking.NetworkIdentity:HandleRPC(Int32, NetworkReader)
+UnityEngine.Networking.ClientScene:OnRPCMessage(NetworkMessage)
+UnityEngine.Networking.NetworkConnection:InvokeHandler(NetworkMessage)
+UnityEngine.Networking.LocalClient:ProcessInternalMessages()
+UnityEngine.Networking.LocalClient:Update()
+UnityEngine.Networking.NetworkClient:UpdateClients()
+UnityEngine.Networking.NetworkIdentity:UNetStaticUpdate()
+ 
+(Filename:  Line: -1)
+
+Log: connection {1} has been disconnected by timeout; address {::ffff:172.19.35.34:58194} time {676827}, last rec time {674818} rtt {5} timeout {2000}
+Log: connection {2} has been disconnected by timeout; address {::ffff:172.19.36.131:53391} time {676848}, last rec time {674841} rtt {13} timeout {2000}
+ServerDisconnected due to error: Timeout
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+Attempt to send to not connected connection {2}
+ 
+(Filename:  Line: 362)
+
+Failed to send internal buffer channel:0 bytesToSend:5
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+Send Error: WrongConnection channel:0 bytesToSend:5
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+ServerDisconnected due to error: Timeout
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+Log: connection {3} has been disconnected by timeout; address {::ffff:172.19.37.125:62158} time {679559}, last rec time {677515} rtt {972} timeout {2000}
+ServerDisconnected due to error: Timeout
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+

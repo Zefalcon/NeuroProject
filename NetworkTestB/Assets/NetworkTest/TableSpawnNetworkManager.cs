@@ -72,17 +72,19 @@ public class TableSpawnNetworkManager : NetworkManager {
 	public override void OnClientConnect(NetworkConnection conn) {
 		ClientScene.AddPlayer(conn, 0);
 		TableSelector.gameObject.SetActive(false);
+		//TableSelector = GameObject.Find("TableSelectionArea");
 	}
 
 	public override void OnServerAddPlayer(NetworkConnection conn, short playerControllerId, NetworkReader extraMessageReader) {
 		Vector3 location = tableLocations[tableSelected] + seatOffsets[seatSelected];
 
-		//TableSelector.gameObject.SetActive(false);
-
 		GameObject player = GameObject.Instantiate(playerPrefab, location, Quaternion.identity);
 		NetworkServer.AddPlayerForConnection(conn, player, playerControllerId);
+	}
 
-		//base.OnServerAddPlayer(conn, playerControllerId, extraMessageReader);
+	public override void OnStopHost() {
+		TableSelector.gameObject.SetActive(true);
+		base.OnStopHost();
 	}
 
 	public override void OnClientDisconnect(NetworkConnection conn) {

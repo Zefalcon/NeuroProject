@@ -44,6 +44,16 @@ public class Connection : MonoBehaviour {
 		if(setUp && (startPt == null || endPt == null)) {
 			//One of the endpoints has been destroyed.  Destroy this.
 			//TODO: Eventually, save connection and try to restore when user reconnects.
+			if (startPt != null) {
+				//If start isn't null, delete connection from its list.
+				Controller presynapse = startPt.GetComponent<Controller>();
+				presynapse.RemoveConnection(presynapse.gameObject, this.gameObject);
+				//presynapse.connectionsToOthers.Remove(this);
+			}
+			else {
+				//If start IS null, controller has already been deleted.  Thus, its connections are no longer stored.
+			}
+
 			NetworkServer.Destroy(this.gameObject);
 		}
 	}

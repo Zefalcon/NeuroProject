@@ -24,52 +24,56 @@ public class ConnectionManager : NetworkBehaviour {
 
 		//Left click creates excitatory connection
 		if (Input.GetMouseButtonUp(0)) {
-			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-			RaycastHit hit;
+			if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) {
+				Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+				RaycastHit hit;
 
-			if (Physics.Raycast(ray, out hit, 100)) {
-				//Check if cube
-				if (hit.transform.gameObject.GetComponent<Controller>() != null) {
-					if (hit.transform.gameObject.Equals(cubeInstance.transform.gameObject)) {
-						//Same object; don't form connection
-						return;
+				if (Physics.Raycast(ray, out hit, 100)) {
+					//Check if cube
+					if (hit.transform.gameObject.GetComponent<Controller>() != null) {
+						if (hit.transform.gameObject.Equals(cubeInstance.transform.gameObject)) {
+							//Same object; don't form connection
+							return;
+						}
+						//Check if connection already exists
+						//GameObject existingConnection = GameObject.Find("NewNetworkManager/Connection: " + cubeInstance.transform.gameObject.name + "->" + hit.transform.gameObject.name);
+						//if (existingConnection == null) {
+							//Proceed
+							CmdAskSpawnConnection(cubeInstance.transform.gameObject, hit.transform.gameObject, true);
+						//}
 					}
-					//Check if connection already exists
-					GameObject existingConnection = GameObject.Find("NetworkManager/Connection: " + cubeInstance.transform.gameObject.name + "->" + hit.transform.gameObject.name);
-					if (existingConnection == null) {
-						//Proceed
-						CmdAskSpawnConnection(cubeInstance.transform.gameObject, hit.transform.gameObject, true);
-					}
-				}
-				//Check if connection
-				Connection toDelete = hit.transform.gameObject.GetComponent<Connection>();
-				if (toDelete != null) {
-					//Check if client is connected to said connection
-					if (toDelete.GetStart().Equals(cubeInstance.transform.gameObject) ||
-						toDelete.GetEnd().Equals(cubeInstance.transform.gameObject)) {
-						//Send delete request
-						AskDeleteConnection(toDelete.gameObject);
+					//Check if connection
+					Connection toDelete = hit.transform.gameObject.GetComponent<Connection>();
+					if (toDelete != null) {
+						//Check if client is connected to said connection
+						if (toDelete.GetStart().Equals(cubeInstance.transform.gameObject) ||
+							toDelete.GetEnd().Equals(cubeInstance.transform.gameObject)) {
+							//Send delete request
+							AskDeleteConnection(toDelete.gameObject);
+						}
 					}
 				}
 			}
 		}
 		//Right click creates inhibitory connection
 		else if (Input.GetMouseButtonUp(1)) {
-			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-			RaycastHit hit;
+			if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) {
+				Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+				RaycastHit hit;
 
-			if (Physics.Raycast(ray, out hit, 100)) {
-				//Check if cube
-				if (hit.transform.gameObject.GetComponent<Controller>() != null) {
-					if (hit.transform.gameObject.Equals(cubeInstance.transform.gameObject)) {
-						//Same object; don't form connection
-						return;
-					}
-					//Check if connection already exists
-					GameObject existingConnection = GameObject.Find("NetworkManager/Connection: " + cubeInstance.transform.gameObject.name + "->" + hit.transform.gameObject.name);
-					if (existingConnection == null) {
-						//Proceed
-						CmdAskSpawnConnection(cubeInstance.transform.gameObject, hit.transform.gameObject, false);
+				if (Physics.Raycast(ray, out hit, 100)) {
+					//Check if cube
+					if (hit.transform.gameObject.GetComponent<Controller>() != null) {
+						if (hit.transform.gameObject.Equals(cubeInstance.transform.gameObject)) {
+							//Same object; don't form connection
+							return;
+						}
+						//Check if connection already exists
+						GameObject existingConnection = GameObject.Find("NewNetworkManager/Connection: " + cubeInstance.transform.gameObject.name + "->" + hit.transform.gameObject.name);
+						if (existingConnection == null) {
+							//Proceed
+							CmdAskSpawnConnection(cubeInstance.transform.gameObject, hit.transform.gameObject, false);
+						}
 					}
 				}
 			}
@@ -86,7 +90,10 @@ public class ConnectionManager : NetworkBehaviour {
 
 	[Command]
 	void CmdDeleteConnection(GameObject toDelete) {
-		NetworkServer.Destroy(toDelete);
+		Connection deleteConnection = toDelete.GetComponent<Connection>();
+		Controller presynapse = deleteConnection.GetStart().GetComponent<Controller>();
+		presynapse.RemoveConnection(presynapse.gameObject, toDelete);
+		//presynapse.connectionsToOthers.Remove(deleteConnection);
 	}
 
 	[ClientRpc]
@@ -101,8 +108,12 @@ public class ConnectionManager : NetworkBehaviour {
 
 	[Command]
 	void CmdAskSpawnConnection(GameObject start, GameObject end, bool isExcitatory) {
-		TargetConnectionRequest(end.GetComponent<Controller>().connectionToClient, start, end, isExcitatory);
-		TargetWaitForResponse(start.GetComponent<Controller>().connectionToClient);
+		GameObject existingConnection = GameObject.Find("NewNetworkManager/Connection: " + start.name + "->" + end.name);
+		if (existingConnection == null) {
+			TargetConnectionRequest(end.GetComponent<Controller>().connectionToClient, start, end, isExcitatory);
+			TargetWaitForResponse(start.GetComponent<Controller>().connectionToClient);
+			//Proceed
+		}
 	}
 
 	[TargetRpc]

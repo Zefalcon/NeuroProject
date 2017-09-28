@@ -105,7 +105,6 @@ public class Controller : NetworkBehaviour {
 
 		for (int i = 0; i < connectionsToOthers.Count; i++) {
 			CmdNeuronFired(connectionsToOthers[i].GetEnd(), connectionsToOthers[i].connectionStrength);
-			Debug.Log("Strength: " + connectionsToOthers[i].connectionStrength);
 		}
 	}
 
@@ -158,5 +157,21 @@ public class Controller : NetworkBehaviour {
 	void TargetNeuronFired(NetworkConnection toInform, float strength) {
 		GameObject informed = toInform.playerControllers[0].gameObject;
 		informed.GetComponent<Controller>().currentInputs.Add(new NeuralInput(strength, Time.time));
+	}
+
+	public void RemoveConnection(GameObject removeFrom, GameObject toRemove) {
+		CmdRemoveConnection(removeFrom, toRemove);
+	}
+
+	[Command]
+	void CmdRemoveConnection(GameObject obj, GameObject toRemove) {
+		//obj.GetComponent<Controller>().connectionsToOthers.Remove(toRemove.GetComponent<Connection>());
+		RpcRemoveConnection(obj, toRemove);
+	}
+
+	[ClientRpc]
+	void RpcRemoveConnection(GameObject obj, GameObject toRemove) {
+		obj.GetComponent<Controller>().connectionsToOthers.Remove(toRemove.GetComponent<Connection>());
+		NetworkServer.Destroy(toRemove);
 	}
 }

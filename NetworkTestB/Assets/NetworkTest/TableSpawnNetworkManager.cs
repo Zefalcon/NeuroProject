@@ -52,7 +52,7 @@ public class TableSpawnNetworkManager : NetworkManager {
 		tableLocations[3] = new Vector3(-HORIZONTAL_TABLE_OFFSET, 0, 0);
 		tableLocations[4] = new Vector3(HORIZONTAL_TABLE_OFFSET, 0, 0);
 		tableLocations[5] = new Vector3(-HORIZONTAL_TABLE_OFFSET, -VERTICAL_TABLE_OFFSET, 0);
-		tableLocations[6] = new Vector3(-HORIZONTAL_TABLE_OFFSET, -VERTICAL_TABLE_OFFSET, 0);
+		tableLocations[6] = new Vector3(HORIZONTAL_TABLE_OFFSET, -VERTICAL_TABLE_OFFSET, 0);
 	}
 
 	// Use this for initialization

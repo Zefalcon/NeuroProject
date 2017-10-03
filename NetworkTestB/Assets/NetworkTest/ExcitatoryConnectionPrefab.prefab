@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 114523211080234602}
   - component: {fileID: 114460252014758346}
   - component: {fileID: 65891409162214650}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: ExcitatoryConnectionPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}

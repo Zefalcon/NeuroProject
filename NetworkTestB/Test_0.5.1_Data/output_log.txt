@@ -1,0 +1,105 @@
+Initialize engine version: 5.6.2f1 (a2913c821e27)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce GTX 970M (ID=0x1618)
+    Vendor:   NVIDIA
+    VRAM:     3038 MB
+    Driver:   22.21.13.8253
+Begin MonoManager ReloadAssembly
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.Analytics.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.Analytics.dll into Unity Child Domain
+- Completed reload, in  0.019 seconds
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\System.Core.dll (this message is harmless)
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\System.dll (this message is harmless)
+desktop: 1920x1080 75Hz; virtual: 1920x1080 at 0,0
+<RI> Initializing input.
+<RI> Input initialized.
+<RI> Initialized touch support.
+UnloadTime: 3.644787 ms
+Setting up 4 worker threads for Enlighten.
+  Thread -> id: 3638 -> priority: 1 
+  Thread -> id: 2914 -> priority: 1 
+  Thread -> id: 1ff8 -> priority: 1 
+  Thread -> id: 2cd8 -> priority: 1 
+Initialize engine version: 5.6.2f1 (a2913c821e27)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce GTX 970M (ID=0x1618)
+    Vendor:   NVIDIA
+    VRAM:     3038 MB
+    Driver:   22.21.13.8253
+Begin MonoManager ReloadAssembly
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.Analytics.dll (this message is harmless)
+Loading C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\UnityEngine.Analytics.dll into Unity Child Domain
+- Completed reload, in  0.018 seconds
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\System.Core.dll (this message is harmless)
+Platform assembly: C:\Users\zefal\Documents\GitHub\NeuroProject\NetworkTestB\Test_0.5.1_Data\Managed\System.dll (this message is harmless)
+desktop: 1920x1080 75Hz; virtual: 1920x1080 at 0,0
+<RI> Initializing input.
+<RI> Input initialized.
+<RI> Initialized touch support.
+UnloadTime: 1.053210 ms
+Setting up 4 worker threads for Enlighten.
+  Thread -> id: e24 -> priority: 1 
+  Thread -> id: 12e4 -> priority: 1 
+  Thread -> id: 22a4 -> priority: 1 
+  Thread -> id: 1c88 -> priority: 1 
+Failed to spawn server object, did you forget to add it to the NetworkManager? assetId=26f04cb288304514b93af9b0633d70a3 netId=5
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+Failed to spawn server object, did you forget to add it to the NetworkManager? assetId=26f04cb288304514b93af9b0633d70a3 netId=5
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+
+NullReferenceException: Object reference not set to an instance of an object
+  at ConnectionManager.RpcSpawnConnection (UnityEngine.GameObject start, UnityEngine.GameObject end, UnityEngine.GameObject connection, Single strength) [0x00000] in <filename unknown>:0 
+  at ConnectionManager.InvokeRpcRpcSpawnConnection (UnityEngine.Networking.NetworkBehaviour obj, UnityEngine.Networking.NetworkReader reader) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkIdentity.HandleRPC (Int32 cmdHash, UnityEngine.Networking.NetworkReader reader) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.ClientScene.OnRPCMessage (UnityEngine.Networking.NetworkMessage netMsg) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkConnection.HandleReader (UnityEngine.Networking.NetworkReader reader, Int32 receivedSize, Int32 channelId) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkConnection.HandleBytes (System.Byte[] buffer, Int32 receivedSize, Int32 channelId) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkConnection.TransportReceive (System.Byte[] bytes, Int32 numBytes, Int32 channelId) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkClient.Update () [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkClient.UpdateClients () [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkIdentity.UNetStaticUpdate () [0x00000] in <filename unknown>:0 
+ 
+(Filename:  Line: -1)
+
+NullReferenceException: Object reference not set to an instance of an object
+  at ConnectionManager.RpcSpawnConnection (UnityEngine.GameObject start, UnityEngine.GameObject end, UnityEngine.GameObject connection, Single strength) [0x00000] in <filename unknown>:0 
+  at ConnectionManager.InvokeRpcRpcSpawnConnection (UnityEngine.Networking.NetworkBehaviour obj, UnityEngine.Networking.NetworkReader reader) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkIdentity.HandleRPC (Int32 cmdHash, UnityEngine.Networking.NetworkReader reader) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.ClientScene.OnRPCMessage (UnityEngine.Networking.NetworkMessage netMsg) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkConnection.HandleReader (UnityEngine.Networking.NetworkReader reader, Int32 receivedSize, Int32 channelId) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkConnection.HandleBytes (System.Byte[] buffer, Int32 receivedSize, Int32 channelId) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkConnection.TransportReceive (System.Byte[] bytes, Int32 numBytes, Int32 channelId) [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkClient.Update () [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkClient.UpdateClients () [0x00000] in <filename unknown>:0 
+  at UnityEngine.Networking.NetworkIdentity.UNetStaticUpdate () [0x00000] in <filename unknown>:0 
+ 
+(Filename:  Line: -1)
+
+Log: connection {1} has been disconnected by timeout; address {::ffff:127.0.0.1:7777} time {80989}, last rec time {78495} rtt {11} timeout {2000}
+ClientDisconnected due to error: Timeout
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/DebugBindings.gen.cpp Line: 51)
+

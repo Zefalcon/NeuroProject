@@ -48,7 +48,6 @@ public class Connection : MonoBehaviour {
 				//If start isn't null, delete connection from its list.
 				Controller presynapse = startPt.GetComponent<Controller>();
 				presynapse.RemoveConnection(presynapse.gameObject, this.gameObject);
-				//presynapse.connectionsToOthers.Remove(this);
 			}
 			else {
 				//If start IS null, controller has already been deleted.  Thus, its connections are no longer stored.

@@ -26,6 +26,20 @@ public class UIManager : MonoBehaviour {
 	}
 
 	public void ApplyAcceptConnection(Text strength) {
+		//Parse strength into positive/negative
+		float str = float.Parse(strength.text);
+		if (str > 0) {
+			//Positive, excitatory
+			excitatoryRef = true;
+		}
+		else if (str < 0) {
+			//Negative, inhibitory
+			excitatoryRef = false;
+		}
+		else {
+			//Strength 0.  Do not spawn
+			return;
+		}
 		GameObject player = NetworkManager.singleton.client.connection.playerControllers[0].gameObject;
 		player.GetComponent<ConnectionManager>().AcceptConnection(connectionStartRef, connectionEndRef, strength.text, excitatoryRef);
 	}
@@ -40,10 +54,9 @@ public class UIManager : MonoBehaviour {
 		player.GetComponent<ConnectionManager>().DeleteConnection(connectionRef);
 	}
 
-	public void OpenAcceptConnectionBox(GameObject start, GameObject end, NetworkConnection asker, bool isExcitatory) {
+	public void OpenAcceptConnectionBox(GameObject start, GameObject end, NetworkConnection asker) {
 		connectionStartRef = start;
 		connectionEndRef = end;
-		excitatoryRef = isExcitatory;
 		askerRef = asker;
 		acceptConnection.SetActive(true);
 		Text message = GameObject.Find("AcceptConnectionText").GetComponent<Text>();

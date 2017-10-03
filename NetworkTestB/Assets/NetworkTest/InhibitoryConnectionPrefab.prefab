@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 114056021902631968}
   - component: {fileID: 114379473638545018}
   - component: {fileID: 65210772862700446}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: InhibitoryConnectionPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -42,11 +42,6 @@ public class Controller : NetworkBehaviour {
 		if (isLocalPlayer) {
 			manager = GameObject.FindObjectOfType<TableSpawnNetworkManager>();
 			transform.position = manager.GetSpawnPosition();
-			/*if (GameObject.Find("TableSelectionArea")) {
-				tableSelector = GameObject.Find("TableSelectionArea");
-				tableSelector.SetActive(false);
-				//GameObject.Find("TableSelectionArea").SetActive(false);
-			}*/
 		}
 	}
 
@@ -67,10 +62,6 @@ public class Controller : NetworkBehaviour {
 		//Check if manually fired
 		if (Input.GetKeyDown(KeyCode.Space)) {
 			ColorChangeParser(new ColorChanger(transform.gameObject, changedColor), false);
-			//CmdColorChange(transform.gameObject, changedColor);
-			//for (int i = 0; i < connectionsToOthers.Count; i++) {
-			//	StartCoroutine("DelayedColorChangeCommand", new ColorChanger(connectionsToOthers[i].GetEnd(), postConnectionColor));
-			//}
 		}
 
 		//Check if fired due to connections
@@ -171,7 +162,14 @@ public class Controller : NetworkBehaviour {
 
 	[ClientRpc]
 	void RpcRemoveConnection(GameObject obj, GameObject toRemove) {
-		obj.GetComponent<Controller>().connectionsToOthers.Remove(toRemove.GetComponent<Connection>());
+		//TODO: ADD NULL CHECK
+		if(obj != null) {
+			List<Connection> connections = obj.GetComponent<Controller>().connectionsToOthers;
+			if(connections != null && toRemove != null) {
+				connections.Remove(toRemove.GetComponent<Connection>());
+			}
+		}
+		//obj.GetComponent<Controller>().connectionsToOthers.Remove(toRemove.GetComponent<Connection>());
 		NetworkServer.Destroy(toRemove);
 	}
 }

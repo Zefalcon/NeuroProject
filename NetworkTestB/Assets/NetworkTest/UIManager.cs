@@ -10,7 +10,7 @@ public class UIManager : MonoBehaviour {
 	GameObject connectionStartRef;  //TODO: MAJOR TESTING to ensure this doesn't screw up things with multiple users trying to connect at once
 	GameObject connectionEndRef;
 	bool excitatoryRef;
-	NetworkConnection askerRef;
+	//NetworkConnection askerRef;
 	public GameObject deleteConnection;
 	GameObject connectionRef;
 	public GameObject awaitingResponse;
@@ -45,7 +45,7 @@ public class UIManager : MonoBehaviour {
 	}
 
 	public void ApplyResponseReceived() {
-		GameObject player = NetworkManager.singleton.client.connection.playerControllers[0].gameObject;
+		//GameObject player = NetworkManager.singleton.client.connection.playerControllers[0].gameObject;
 		//player.GetComponent<ConnectionManager>().ResponseReceived(askerRef);
 	}
 
@@ -57,7 +57,7 @@ public class UIManager : MonoBehaviour {
 	public void OpenAcceptConnectionBox(GameObject start, GameObject end, NetworkConnection asker) {
 		connectionStartRef = start;
 		connectionEndRef = end;
-		askerRef = asker;
+		//askerRef = asker;
 		acceptConnection.SetActive(true);
 		Text message = GameObject.Find("AcceptConnectionText").GetComponent<Text>();
 		message.text = start.name + " wants to connect to you.";

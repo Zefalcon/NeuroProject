@@ -20,12 +20,12 @@ GameObject:
   m_Component:
   - component: {fileID: 4947556573774340}
   - component: {fileID: 33750205111058198}
-  - component: {fileID: 65061865221367288}
   - component: {fileID: 23669778944985100}
   - component: {fileID: 114512632014812120}
   - component: {fileID: 114034474945208702}
   - component: {fileID: 114693959092145992}
   - component: {fileID: 114157916710512398}
+  - component: {fileID: 135798078021888620}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -148,19 +148,7 @@ MeshFilter:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1230793165172250}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!65 &65061865221367288
-BoxCollider:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1230793165172250}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!102 &102467052948941424
 TextMesh:
   serializedVersion: 3
@@ -274,3 +262,15 @@ MonoBehaviour:
   m_SnapThreshold: 5
   m_InterpolateRotation: 1
   m_InterpolateMovement: 5
+--- !u!135 &135798078021888620
+SphereCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1230793165172250}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}

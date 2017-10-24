@@ -79,6 +79,8 @@ public class TableSpawnNetworkManager : NetworkManager {
 		Vector3 location = tableLocations[tableSelected] + seatOffsets[seatSelected];
 
 		GameObject player = GameObject.Instantiate(playerPrefab, location, Quaternion.identity);
+		player.GetComponent<Controller>().SetSeatNum(seatSelected);
+		player.GetComponent<Controller>().SetTableNum(tableSelected);
 		NetworkServer.AddPlayerForConnection(conn, player, playerControllerId);
 	}
 
@@ -115,6 +117,11 @@ public class TableSpawnNetworkManager : NetworkManager {
 	public Vector3 GetSpawnPosition() {
 		Vector3 location = tableLocations[tableSelected] + seatOffsets[seatSelected];
 		return location;
+	}
+
+	public int[] GetPositionIdentities() {
+		int[] position = new int[2] { tableSelected, seatSelected };
+		return position;
 	}
 
 	

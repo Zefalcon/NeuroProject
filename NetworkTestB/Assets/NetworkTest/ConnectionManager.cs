@@ -65,6 +65,7 @@ public class ConnectionManager : NetworkBehaviour {
 	void CmdDeleteConnection(GameObject toDelete) {
 		Connection deleteConnection = toDelete.GetComponent<Connection>();
 		Controller presynapse = deleteConnection.GetStart().GetComponent<Controller>();
+		GameSave.ConnectionRemoved(deleteConnection);
 		presynapse.RemoveConnection(presynapse.gameObject, toDelete);
 	}
 
@@ -136,8 +137,11 @@ public class ConnectionManager : NetworkBehaviour {
 			con.GetComponent<Connection>().connectionStrength = 1;
 		}
 		con.name = "Connection: " + start.name + "->" + end.name;
-		con.transform.SetParent(GameObject.Find("NewNetworkManager").transform); //TODO: Doesn't fix problem of connections disappearing upon reconnection.  Must spend time on this.
+		con.transform.SetParent(GameObject.Find("NewNetworkManager").transform); //TODO: Fix with quicksave/load
 		NetworkServer.Spawn(con);
+		con.GetComponent<Connection>().SetPoints(start, end); //TODO: CHECK INTO THIS LINE
+		start.GetComponent<Controller>().connectionsToOthers.Add(con.GetComponent<Connection>()); //Is this necessary?
+		GameSave.ConnectionMade(con.GetComponent<Connection>());
 		RpcSpawnConnection(start, end, con, str);
 	}
 }

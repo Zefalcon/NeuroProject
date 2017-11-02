@@ -104,27 +104,42 @@ public static class GameSave {
 		}
 	}
 
-	static bool loaded = false;
-
 	static List<NeuronDesignation> loadedPlayers = new List<NeuronDesignation>(); //Players already in the game before save file loaded.
 
-	//static List<ConnectionFile> connectionsToSave = new List<ConnectionFile>(); //Connections added to this list as they are made.  Replaced with spawnedConnections.
 	static List<ConnectionFile> connectionsToLoad = new List<ConnectionFile>(); //Connections added to this list from loaded save file.  As players join, connections to them are sent to the wait list to wait for the other end to join.
 	static List<ConnectionFile> waitingConnections = new List<ConnectionFile>(); //Connections added to this list as players join.  When the player on the other end of the connection joins, these are spawned to the world.
 	static List<ConnectionFile> spawnedConnections = new List<ConnectionFile>(); //Connections that have already been spawned in.  Respawn these when a new player connects (or reconnects) to ensure all connections appear for all players.
 
 	static List<GameObject> connectionsToReset = new List<GameObject>(); //GameObjects of created connections must be saved so they can be reset appropriately.
 
-	public static void SaveGame() {
+	public static void SaveGame(bool backup) {
 		if (!Directory.Exists("Saves")) {
 			Directory.CreateDirectory("Saves");
 		}
+
+		if (backup) {
+			//Save game with backup
+			if (File.Exists("Saves/backup.txt")) {
+				//Save file already exists.  Inform user (TODO) and write over
+				File.Delete("Saves/backup.txt");
+			}
+			CreateSaveFile("Saves/backup.txt");
+		}
+
+		//Save game to regular file
 		if (File.Exists("Saves/save.txt")) {
-			//Save file already exists.  Inform user (TODO) and write over
 			File.Delete("Saves/save.txt");
 		}
-		StreamWriter file = File.CreateText("Saves/save.txt");
-		for (int i = 0; i < spawnedConnections.Count; i++) {
+		CreateSaveFile("Saves/save.txt");
+		Debug.Log("Game Saved!");
+		if (backup) {
+			Debug.Log("Backup Created!");
+		}
+	}
+
+	private static void CreateSaveFile(string filename) {
+		StreamWriter file = File.CreateText(filename);
+		for (int i=0; i < spawnedConnections.Count; i++) {
 			StringBuilder builder = new StringBuilder();
 			builder.Append("Start(Tbl" + spawnedConnections[i].GetStart()[0]);
 			builder.Append(" Seat" + spawnedConnections[i].GetStart()[1]);
@@ -134,11 +149,18 @@ public static class GameSave {
 			file.WriteLine(builder.ToString());
 		}
 		file.Close();
-		Debug.Log("Game Saved!");
 	}
 
 	public static void LoadGame() {
-		StreamReader reader = new StreamReader("Saves/save.txt");
+		LoadGame("Saves/save.txt");
+	}
+
+	public static void LoadBackup() {
+		LoadGame("Saves/backup.txt");
+	}
+
+	public static void LoadGame(string file) {
+		StreamReader reader = new StreamReader(file);
 		while (!reader.EndOfStream) {
 			ConnectionFile con;
 			string line = reader.ReadLine();
@@ -149,51 +171,38 @@ public static class GameSave {
 				Debug.LogError("Start Table format incorrect");
 				continue;
 			}
-			//int startTable = int.Parse(line.Substring(0, 1));
 			line = line.Substring(6); //Start seat number
 			int startSeat;
 			if(!int.TryParse(line.Substring(0,1), out startSeat)) {
 				Debug.LogError("Start Seat format incorrect");
 				continue;
 			}
-			//int startSeat = int.Parse(line.Substring(0, 1));
 			line = line.Substring(10); //End table number
 			int endTable;
 			if (!int.TryParse(line.Substring(0, 1), out endTable)){
 				Debug.LogError("End Table format incorrect");
 				continue;
 			}
-			//int endTable = int.Parse(line.Substring(0, 1));
 			line = line.Substring(6); //End seat number
 			int endSeat;
 			if(!int.TryParse(line.Substring(0,1), out endSeat)) {
 				Debug.LogError("End Seat format incorrect");
 				continue;
 			}
-			//int endSeat = int.Parse(line.Substring(0, 1));
 			line = line.Substring(6); //Strength
 			float strength;
 			if(!float.TryParse(line, out strength)) {
 				Debug.LogError("Strength format incorrect");
 				continue;
 			}
-			//float strength = float.Parse(line);
 			con = new ConnectionFile(startTable, endTable, startSeat, endSeat, strength);
 			connectionsToLoad.Add(con);
 		}
 		reader.Close();
 		Debug.Log("Game Loaded!");
-		loaded = true;
 
 		//Reset all connections.  Done once here so it isn't done several times in PlayerEntered.
-		int endpoint = connectionsToReset.Count; //Must use outside endpoint to prevent editing list while iterating.
-		for (int i = endpoint - 1; i >= 0; i--) { //Go in reverse so indices don't shift awkwardly.
-			if (connectionsToReset[i] != null) { //If it isn't already gone, destroy it.
-				connectionsToReset[i].GetComponent<Connection>().Destroy(false);
-			}
-		}
-
-		connectionsToReset = new List<GameObject>();
+		ResetConnections();
 		spawnedConnections = new List<ConnectionFile>(); //Must be reset on load so ghost connections don't pop back up.
 
 		//Spawn connections for players already in scene.
@@ -209,15 +218,8 @@ public static class GameSave {
 		if (!preloaded) {
 			loadedPlayers.Add(nu);
 
-			//Reset all connections 
-			int endpoint = connectionsToReset.Count; //Must use outside endpoint to prevent editing list while iterating.
-			for (int i = endpoint - 1; i >= 0; i--) { //Go in reverse so indices don't shift awkwardly
-				if (connectionsToReset[i] != null) { //If it isn't gone already, destroy it.
-					connectionsToReset[i].GetComponent<Connection>().Destroy(true);
-				}
-			}
-
-			connectionsToReset = new List<GameObject>();
+			//Reset all connections
+			RefreshConnections();
 
 			//Respawn already-spawned connections.  //Only done on connect/reconnect, not load.
 			for (int i = 0; i < spawnedConnections.Count; i++) {
@@ -294,6 +296,32 @@ public static class GameSave {
 				spawnedConnections.Remove(file);
 			}
 		}
+	}
+
+	//Resets connections after a player logs in to ensure all connections exist properly
+	public static void RefreshConnections() {
+		int endpoint = connectionsToReset.Count; //Must use outside endpoint to prevent editing list while iterating.
+		for (int i = endpoint - 1; i >= 0; i--) { //Go in reverse so indices don't shift awkwardly
+			if (connectionsToReset[i] != null) { //If it isn't gone already, destroy it.
+				connectionsToReset[i].GetComponent<Connection>().Destroy(true);
+			}
+		}
+
+		connectionsToReset = new List<GameObject>();
+	}
+
+	//Resets all connections by deleting them
+	public static void ResetConnections() {
+		GameObject player = NetworkManager.singleton.client.connection.playerControllers[0].gameObject;
+		ConnectionManager manager = player.GetComponent<ConnectionManager>();
+		int endpoint = connectionsToReset.Count; //Must use outside endpoint to prevent editing list while iterating.
+		for (int i = endpoint - 1; i >= 0; i--) { //Go in reverse so indices don't shift awkwardly
+			if (connectionsToReset[i] != null) { //If it isn't gone already, destroy it.
+				manager.DeleteConnection(connectionsToReset[i]);
+			}
+		}
+
+		connectionsToReset = new List<GameObject>();
 	}
 
 	//Helper method to spawn connections based on given connection file

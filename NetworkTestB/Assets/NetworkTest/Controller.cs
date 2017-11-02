@@ -23,6 +23,8 @@ public class Controller : NetworkBehaviour {
 	private int tableNum;
 	[SyncVar]
 	private int seatNum;
+	[SyncVar]
+	bool isInstructor = false;
 
 	public int GetTableNum() {
 		return tableNum;
@@ -38,6 +40,26 @@ public class Controller : NetworkBehaviour {
 
 	public void SetSeatNum(int seat) {
 		seatNum = seat;
+	}
+
+	public void SetInstructor() {
+		isInstructor = true;
+	}
+
+	public void SetThreshold(float threshold) {
+		neuralInputThreshold = threshold;
+	}
+
+	public void SetHighThreshold(float threshold) {
+		neuralInputThresholdHigh = threshold;
+	}
+
+	public void SetAbsRefractoryPd(float hardCooldown) {
+		hardNeuralCooldown = hardCooldown;
+	}
+
+	public void SetRelRefractoryPd(float softCooldown) {
+		softNeuralCooldown = softCooldown;
 	}
 
 	public class NeuralInput {
@@ -57,21 +79,32 @@ public class Controller : NetworkBehaviour {
 	}
 
 	// Use this for initialization
-	void Start () {
+	void Start() {
 		defaultColor = this.GetComponent<MeshRenderer>().material.color;
 		changedColor = Color.green;
 
 		currentInputs = new List<NeuralInput>();
 
+		neuralInputThreshold = 10f;
+		neuralInputThresholdHigh = 20f;
+		last_firing = -100f;
+		hardNeuralCooldown = 1f;
+		softNeuralCooldown = 3f;
+
 		if (isLocalPlayer) {
 			manager = GameObject.FindObjectOfType<TableSpawnNetworkManager>();
 			transform.position = manager.GetSpawnPosition();
-			int[] pos = manager.GetPositionIdentities();
+			int[] pos = manager.GetPositionIdentities(); //Fails (Instructor) if client
 			tableNum = pos[0];
 			seatNum = pos[1];
+			isInstructor = manager.GetInstructorStatus();
 			CmdApplyPositionNumbers(gameObject, tableNum, seatNum);
 			CmdPlayerEntered(gameObject, tableNum, seatNum);
-			//GameSave.PlayerEntered(gameObject, tableNum, seatNum, false);
+			if (isInstructor) { //Is set for local player
+				//Engage Instructor Mode
+				CmdEngageInstructorMode(gameObject);
+				Camera.main.gameObject.transform.position = new Vector3(0, 0, -20); //Works regardless of server/client
+			}
 		}
 	}
 
@@ -86,67 +119,185 @@ public class Controller : NetworkBehaviour {
 		obj.GetComponent<Controller>().SetSeatNum(seat);
 	}
 
+	[Command]
+	void CmdEngageInstructorMode(GameObject obj) {
+		obj.GetComponent<Controller>().SetInstructor();
+		obj.GetComponent<MeshRenderer>().enabled = false; //Doesn't show on other clients, but does show on own if server
+		obj.GetComponent<SphereCollider>().enabled = false; //Should not be clickable
+		if (obj.GetComponentInChildren<CubeLabel>() != null) {
+			obj.GetComponentInChildren<CubeLabel>().gameObject.SetActive(false);
+		}
+		obj.GetComponent<ConnectionManager>().isInstructor = true;
+		RpcEngageInstructorMode(obj);
+	}
+
+	[ClientRpc]
+	void RpcEngageInstructorMode(GameObject obj) {
+		obj.GetComponent<Controller>().SetInstructor();
+		obj.GetComponent<MeshRenderer>().enabled = false;
+		obj.GetComponent<SphereCollider>().enabled = false;
+		if (obj.GetComponentInChildren<CubeLabel>() != null) {
+			obj.GetComponentInChildren<CubeLabel>().gameObject.SetActive(false);
+		}
+		obj.GetComponent<ConnectionManager>().isInstructor = true;
+	}
+
 	// Update is called once per frame
-	void Update () {
+	void Update() {
 
 		if (!isLocalPlayer) {
 			return;
 		}
 
-		if (isServer) {
-			//Only server can save/load the game
-			//TODO: Make instructor, not server
-			if (Input.GetKeyDown(KeyCode.End)) {
-				//Save the game
-				GameSave.SaveGame();
+		if (isInstructor) {
+			//Ensure proper appearance
+			CmdEngageInstructorMode(gameObject);
+
+			//Instructors can click on players to set their refractory variables
+			if (Input.GetMouseButtonUp(0)) {
+				if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) {
+					Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+					RaycastHit hit;
+
+					if (Physics.Raycast(ray, out hit, 100)) {
+						//Check if cube
+						if (hit.transform.gameObject.GetComponent<Controller>() != null) {
+							CmdOpenSetNeuronParameters(gameObject, hit.transform.gameObject);
+						}
+					}
+				}
 			}
-			if (Input.GetKeyDown(KeyCode.Return)) {
+		}
+
+		if (isInstructor || isServer) {
+			//Only instructor OR server can save/load the game
+			if (Input.GetKeyDown(KeyCode.End) || Input.GetKeyDown(KeyCode.F1)) {
+				//Save the game
+				CmdSaveGame(false);
+			}
+			if (Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.F3)) {
+				//Backup save
+				CmdSaveGame(true);
+			}
+			if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.F2)) {
 				//Load the game
-				GameSave.LoadGame();
+				CmdLoadGame();
+			}
+			if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.F4)) {
+				//Load backup
+				CmdLoadBackup();
+			}
+			if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.F5)) {
+				//Remove all connections and start fresh
+				CmdResetConnections();
 			}
 		}
 
 		Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, Camera.main.transform.position.z);
-
-		//Check if manually fired
-		if (Input.GetKeyDown(KeyCode.Space)) {
-			last_firing = Time.time;
-			ColorChangeParser(new ColorChanger(transform.gameObject, changedColor), false);
-		}
-
-		//Check if fired due to connections
-		float threshold = float.MaxValue;
-		if(Time.time < last_firing + hardNeuralCooldown) {
-			//Do NOT fire.  Keep threshold at infinity
-		}
-		else if(Time.time < last_firing + hardNeuralCooldown + softNeuralCooldown) {
-			//Threshold is maxxed.
-			threshold = neuralInputThresholdHigh;
-		}
-		else {
-			//Threshold is normal
-			threshold = neuralInputThreshold;
-		}
-		float combinedInputStrength = 0;
-		for (int i=0; i<currentInputs.Count; i++) {
-			if (currentInputs[i].IsCurrent(Time.time)) {
-				combinedInputStrength += currentInputs[i].Strength();
-			}
-			else {
-				//Remove old input to streamline
-				currentInputs.Remove(currentInputs[i]);
-			}
-		}
-		if (combinedInputStrength >= threshold) {
-			last_firing = Time.time;
-			ColorChangeParser(new ColorChanger(transform.gameObject, changedColor), false);
-		}
 
 		var x = Input.GetAxis("Horizontal") * Time.deltaTime * 3.0f;
 		var y = Input.GetAxis("Vertical") * Time.deltaTime * 3.0f;
 
 		transform.Translate(x, 0, 0);
 		transform.Translate(0, y, 0);
+
+		if (!isInstructor) {
+
+			//Check if manually fired
+			if (Input.GetKeyDown(KeyCode.Space)) {
+				last_firing = Time.time;
+				ColorChangeParser(new ColorChanger(transform.gameObject, changedColor), false);
+			}
+
+			//Check if fired due to connections
+			float threshold = float.MaxValue;
+			if (Time.time < last_firing + hardNeuralCooldown) {
+				//Do NOT fire.  Keep threshold at infinity
+			}
+			else if (Time.time < last_firing + hardNeuralCooldown + softNeuralCooldown) {
+				//Threshold is high.
+				threshold = neuralInputThresholdHigh;
+			}
+			else {
+				//Threshold is normal
+				threshold = neuralInputThreshold;
+			}
+			float combinedInputStrength = 0;
+			for (int i = 0; i < currentInputs.Count; i++) {
+				if (currentInputs[i].IsCurrent(Time.time)) {
+					combinedInputStrength += currentInputs[i].Strength();
+				}
+				else {
+					//Remove old input to streamline
+					currentInputs.Remove(currentInputs[i]);
+				}
+			}
+			if (combinedInputStrength >= threshold) {
+				last_firing = Time.time;
+				ColorChangeParser(new ColorChanger(transform.gameObject, changedColor), false);
+			}
+		}
+	}
+
+	[Command]
+	public void CmdSaveGame(bool backup) {
+		GameSave.SaveGame(backup);
+	}
+
+	[Command]
+	public void CmdLoadGame() {
+		GameSave.LoadGame();
+	}
+
+	[Command]
+	public void CmdLoadBackup() {
+		GameSave.LoadBackup();
+	}
+
+	[Command]
+	public void CmdResetConnections() {
+		GameSave.ResetConnections();
+		RpcResetConnections();
+		Debug.Log("All connections reset.");
+	}
+
+	[ClientRpc]
+	public void RpcResetConnections() {
+		//TODO: Does this help?
+		GameSave.ResetConnections();
+	}
+
+	[Command]
+	public void CmdOpenSetNeuronParameters(GameObject instructor, GameObject neuron) {
+		TargetOpenSetNeuronParameters(instructor.GetComponent<Controller>().connectionToClient, neuron);
+	}
+
+	[TargetRpc]
+	public void TargetOpenSetNeuronParameters(NetworkConnection network, GameObject neuron) {
+		GameObject.Find("UIManager").GetComponent<UIManager>().OpenSetNeuronParametersBox(neuron);
+	}
+
+	public void SetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod) {
+		CmdSetNeuronParameters(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod);
+	}
+
+	[Command]
+	public void CmdSetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod) {
+		Controller c = neuron.GetComponent<Controller>();
+		c.SetThreshold(regularThreshold);
+		c.SetHighThreshold(highThreshold);
+		c.SetAbsRefractoryPd(absoluteRefractoryPeriod);
+		c.SetRelRefractoryPd(relativeRefractoryPeriod);
+		RpcSetNeuronParameters(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod);
+	}
+
+	[ClientRpc]
+	public void RpcSetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod) {
+		Controller c = neuron.GetComponent<Controller>();
+		c.SetThreshold(regularThreshold);
+		c.SetHighThreshold(highThreshold);
+		c.SetAbsRefractoryPd(absoluteRefractoryPeriod);
+		c.SetRelRefractoryPd(relativeRefractoryPeriod);
 	}
 
 	public void ColorChangeParser(ColorChanger toChange, bool delayed) {
@@ -206,7 +357,6 @@ public class Controller : NetworkBehaviour {
 	[Command]
 	void CmdNeuronFired(GameObject toInform, float strength) {
 		TargetNeuronFired(toInform.GetComponent<Controller>().connectionToClient, strength);
-		//toInform.GetComponent<Controller>().currentInputs.Add(new NeuralInput(strength, Time.time));
 	}
 
 	[TargetRpc]
@@ -233,8 +383,6 @@ public class Controller : NetworkBehaviour {
 				connections.Remove(toRemove.GetComponent<Connection>());
 			}
 		}
-		//obj.GetComponent<Controller>().connectionsToOthers.Remove(toRemove.GetComponent<Connection>());
-		//GameSave.ConnectionRemoved(toRemove.GetComponent<Connection>());
 		NetworkServer.Destroy(toRemove);
 	}
 }

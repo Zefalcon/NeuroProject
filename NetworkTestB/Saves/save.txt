@@ -1,1 +1,3 @@
-Start(Tbl1 Seat3) End(Tbl1 Seat2) Str-3
+Start(Tbl1 Seat1) End(Tbl1 Seat2) Str10
+Start(Tbl1 Seat3) End(Tbl1 Seat1) Str-2
+Start(Tbl1 Seat2) End(Tbl1 Seat3) Str5

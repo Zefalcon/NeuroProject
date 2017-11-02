@@ -7,13 +7,19 @@ using UnityEngine.Networking;
 public class UIManager : MonoBehaviour {
 
 	public GameObject acceptConnection;
-	GameObject connectionStartRef;  //TODO: MAJOR TESTING to ensure this doesn't screw up things with multiple users trying to connect at once
+	GameObject connectionStartRef;  //First come, first serve.
 	GameObject connectionEndRef;
 	bool excitatoryRef;
-	//NetworkConnection askerRef;
 	public GameObject deleteConnection;
 	GameObject connectionRef;
-	public GameObject awaitingResponse;
+	public GameObject setNeuronParameters;
+	GameObject neuronToSetRef;
+
+	//Temporary variables because Buttons can only transfer one thing at a time
+	float regThresholdTemp;
+	float highThresholdTemp;
+	float absRefPdTemp;
+	float relRefPdTemp;
 
 	// Use this for initialization
 	void Start () {
@@ -44,20 +50,47 @@ public class UIManager : MonoBehaviour {
 		player.GetComponent<ConnectionManager>().AcceptConnection(connectionStartRef, connectionEndRef, strength.text, excitatoryRef);
 	}
 
-	public void ApplyResponseReceived() {
-		//GameObject player = NetworkManager.singleton.client.connection.playerControllers[0].gameObject;
-		//player.GetComponent<ConnectionManager>().ResponseReceived(askerRef);
-	}
-
 	public void ApplyDeleteConnection() {
 		GameObject player = NetworkManager.singleton.client.connection.playerControllers[0].gameObject;
 		player.GetComponent<ConnectionManager>().DeleteConnection(connectionRef);
 	}
 
-	public void OpenAcceptConnectionBox(GameObject start, GameObject end, NetworkConnection asker) {
+	public void ApplyRegularThreshold(Text threshold) {
+		if(!float.TryParse(threshold.text, out regThresholdTemp)) {
+			//Failed parsing.  Inform console
+			Debug.LogError("Regular Threshold failed to parse.");
+		}
+	}
+
+	public void ApplyHighThreshold(Text threshold) {
+		if(!float.TryParse(threshold.text, out highThresholdTemp)) {
+			//Failed parsing.  Inform console
+			Debug.LogError("High Threshold failed to parse.");
+		}
+	}
+
+	public void ApplyAbsoluteRefractoryPeriod(Text refPd) {
+		if(!float.TryParse(refPd.text, out absRefPdTemp)) {
+			//Failed parsing.  Inform console
+			Debug.LogError("Absolute Refractory Period failed to parse.");
+		}
+	}
+
+	public void ApplyRelativeRefractoryPeriod(Text refPd) {
+		if (!float.TryParse(refPd.text, out relRefPdTemp)) {
+			//Failed parsing.  Inform console
+			Debug.LogError("Relative Refractory Period failed to parse.");
+		}
+	}
+
+	public void ApplyNeuronParameters() {
+		GameObject player = NetworkManager.singleton.client.connection.playerControllers[0].gameObject;
+		player.GetComponent<Controller>().SetNeuronParameters(neuronToSetRef, regThresholdTemp, highThresholdTemp, absRefPdTemp, relRefPdTemp);
+	}
+
+	public void OpenAcceptConnectionBox(GameObject start, GameObject end) {
 		connectionStartRef = start;
 		connectionEndRef = end;
-		//askerRef = asker;
 		acceptConnection.SetActive(true);
 		Text message = GameObject.Find("AcceptConnectionText").GetComponent<Text>();
 		message.text = start.name + " wants to connect to you.";
@@ -76,11 +109,12 @@ public class UIManager : MonoBehaviour {
 		deleteConnection.SetActive(false);
 	}
 
-	public void OpenAwaitingResponseBox() {
-		awaitingResponse.SetActive(true);
+	public void OpenSetNeuronParametersBox(GameObject neuron) {
+		setNeuronParameters.SetActive(true);
+		neuronToSetRef = neuron;
 	}
 
-	public void CloseAwaitingResponseBox() {
-		awaitingResponse.SetActive(false);
+	public void CloseSetNeuronParametersBox() {
+		setNeuronParameters.SetActive(false);
 	}
 }

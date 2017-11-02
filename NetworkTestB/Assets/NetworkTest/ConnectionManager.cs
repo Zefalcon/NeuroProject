@@ -8,6 +8,7 @@ public class ConnectionManager : NetworkBehaviour {
 	Controller cubeInstance;
 	public GameObject excitatoryConnectionPrefab;
 	public GameObject inhibitoryConnectionPrefab;
+	public bool isInstructor = false;
 
 	// Use this for initialization
 	void Start () {
@@ -18,7 +19,7 @@ public class ConnectionManager : NetworkBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (!isLocalPlayer) {
+		if (!isLocalPlayer || isInstructor) {
 			return;
 		}
 
@@ -35,7 +36,7 @@ public class ConnectionManager : NetworkBehaviour {
 							//Same object; don't form connection
 							return;
 						}
-						CmdAskSpawnConnection(cubeInstance.transform.gameObject, hit.transform.gameObject/*, true*/);
+						CmdAskSpawnConnection(cubeInstance.transform.gameObject, hit.transform.gameObject);
 					}
 
 					//Check if connection
@@ -84,32 +85,15 @@ public class ConnectionManager : NetworkBehaviour {
 		GameObject existingConnection = GameObject.Find("NewNetworkManager/Connection: " + start.name + "->" + end.name);
 		if (existingConnection == null) {
 			TargetConnectionRequest(end.GetComponent<Controller>().connectionToClient, start, end);
-			TargetWaitForResponse(start.GetComponent<Controller>().connectionToClient);
 			//Proceed
 		}
-	}
-
-	[TargetRpc]
-	void TargetWaitForResponse(NetworkConnection network) {
-		//GameObject.Find("UIManager").GetComponent<UIManager>().OpenAwaitingResponseBox();
-	}
-
-	public void ResponseReceived(NetworkConnection network) {
-		if (isLocalPlayer) {
-			TargetResponseReceived(network);
-		}
-	}
-
-	[TargetRpc]
-	void TargetResponseReceived(NetworkConnection network) {
-		GameObject.Find("UIManager").GetComponent<UIManager>().CloseAwaitingResponseBox();
 	}
 
 	[TargetRpc]
 	void TargetConnectionRequest(NetworkConnection network, GameObject start, GameObject end) {
 		//Receiver accepts connection
 		//Bring up interface for user to decide whether to connect
-		GameObject.Find("UIManager").GetComponent<UIManager>().OpenAcceptConnectionBox(start, end, start.GetComponent<Controller>().connectionToClient);
+		GameObject.Find("UIManager").GetComponent<UIManager>().OpenAcceptConnectionBox(start, end);
 	}
 
 	public void AcceptConnection(GameObject start, GameObject end, string strength, bool isExcitatory) {
@@ -137,10 +121,9 @@ public class ConnectionManager : NetworkBehaviour {
 			con.GetComponent<Connection>().connectionStrength = 1;
 		}
 		con.name = "Connection: " + start.name + "->" + end.name;
-		con.transform.SetParent(GameObject.Find("NewNetworkManager").transform); //TODO: Fix with quicksave/load
+		con.transform.SetParent(GameObject.Find("NewNetworkManager").transform);
 		NetworkServer.Spawn(con);
-		con.GetComponent<Connection>().SetPoints(start, end); //TODO: CHECK INTO THIS LINE
-		start.GetComponent<Controller>().connectionsToOthers.Add(con.GetComponent<Connection>()); //Is this necessary?
+		con.GetComponent<Connection>().SetPoints(start, end);
 		GameSave.ConnectionMade(con.GetComponent<Connection>());
 		RpcSpawnConnection(start, end, con, str);
 	}

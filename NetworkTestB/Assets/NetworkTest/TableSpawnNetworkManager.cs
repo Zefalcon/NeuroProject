@@ -2,17 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 
 public class TableSpawnNetworkManager : NetworkManager {
 
-	public GameObject TableSelector; //TableSelector should have 6 buttons and a text box.  Buttons determine which table player is at, text box determines what seat they are in.
+	public GameObject TableSelector;
+	public GameObject InstructorLogin; //Instructor login should have a textbox for password input and a button to input said password.
 
 	int tableSelected = 0;
 	int seatSelected = 0;
 	bool isInstructor = false;
 	[SerializeField]
 	[Tooltip("The required password instructors must enter")]
-	string password = "Wingdings"; //Change this to change the password required.
+	string password = "Neuron"; //Change this to change the password required.
 
 	static Vector3[] tableLocations;
 	static Vector3[] seatOffsets;
@@ -72,7 +74,7 @@ public class TableSpawnNetworkManager : NetworkManager {
 	public override void OnClientConnect(NetworkConnection conn) {
 		ClientScene.AddPlayer(conn, 0);
 		TableSelector.gameObject.SetActive(false);
-		//TableSelector = GameObject.Find("TableSelectionArea");
+		InstructorLogin.gameObject.SetActive(false);
 	}
 
 	public override void OnServerAddPlayer(NetworkConnection conn, short playerControllerId, NetworkReader extraMessageReader) {
@@ -81,37 +83,51 @@ public class TableSpawnNetworkManager : NetworkManager {
 		GameObject player = GameObject.Instantiate(playerPrefab, location, Quaternion.identity);
 		player.GetComponent<Controller>().SetSeatNum(seatSelected);
 		player.GetComponent<Controller>().SetTableNum(tableSelected);
+		player.GetComponent<Controller>().SetInstructor();
 		NetworkServer.AddPlayerForConnection(conn, player, playerControllerId);
 	}
 
 	public override void OnStopHost() {
 		TableSelector.gameObject.SetActive(true);
+		InstructorLogin.gameObject.SetActive(true);
 		base.OnStopHost();
 	}
 
 	public override void OnClientDisconnect(NetworkConnection conn) {
 		TableSelector.gameObject.SetActive(true);
+		InstructorLogin.gameObject.SetActive(true);
 		base.OnClientDisconnect(conn);
 	}
 
 	public void SetTableNum(int table) {
-		tableSelected = table;
+		if (!isInstructor) {
+			//Instrutors spawn at 0,0
+			tableSelected = table;
+		}
 	}
 
 	public void SetSeatNum(int seat) {
-		seatSelected = seat;
+		if (!isInstructor) {
+			//Instructors spawn at 0,0
+			seatSelected = seat;
+		}
 	}
 
-	public void SetInstructor(bool instructor, string passcode) {
-		if (passcode.Equals(password)) {
+	public void SetInstructor(Text passcode) {
+		if (passcode.text.Equals(password)) {
 			//Password accepted.
-			isInstructor = instructor;
+			isInstructor = true;
 			tableSelected = 0;
 			seatSelected = 0;
+			StartClient();
 		}
 		else {
 			Debug.LogWarning("Incorrect password.");
 		}
+	}
+
+	public bool GetInstructorStatus() {
+		return isInstructor;
 	}
 
 	public Vector3 GetSpawnPosition() {

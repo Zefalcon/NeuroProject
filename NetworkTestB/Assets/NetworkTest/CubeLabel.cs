@@ -7,14 +7,17 @@ public class CubeLabel : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		int id = (int)GetComponentInParent<Controller>().netId.Value;
-		GetComponent<TextMesh>().text = "" + id;
-		transform.parent.name = transform.parent.name + id;
-		//Debug.Log("Cube " + id + " created!");
+		int table = GetComponentInParent<Controller>().GetTableNum();
+		int seat = GetComponentInParent<Controller>().GetSeatNum();
+		GetComponent<TextMesh>().text = "" + table + "," + seat;
+		transform.parent.name = table + "," + seat;
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		
+		int table = GetComponentInParent<Controller>().GetTableNum();
+		int seat = GetComponentInParent<Controller>().GetSeatNum();
+		GetComponent<TextMesh>().text = "" + table + "," + seat;
+		transform.parent.name = table + "," + seat;
 	}
 }

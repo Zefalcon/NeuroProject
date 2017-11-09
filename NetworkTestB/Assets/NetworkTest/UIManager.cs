@@ -6,6 +6,8 @@ using UnityEngine.Networking;
 
 public class UIManager : MonoBehaviour {
 
+	public static bool inDialogue = false;
+
 	public GameObject acceptConnection;
 	GameObject connectionStartRef;  //First come, first serve.
 	GameObject connectionEndRef;
@@ -92,12 +94,14 @@ public class UIManager : MonoBehaviour {
 		connectionStartRef = start;
 		connectionEndRef = end;
 		acceptConnection.SetActive(true);
+		inDialogue = true;
 		Text message = GameObject.Find("AcceptConnectionText").GetComponent<Text>();
 		message.text = start.name + " wants to connect to you.";
 	}
 
 	public void CloseAcceptConnectionBox() {
 		acceptConnection.SetActive(false);
+		inDialogue = false;
 	}
 
 	public void OpenDeleteConnectionBox(GameObject toDelete) {
@@ -111,10 +115,12 @@ public class UIManager : MonoBehaviour {
 
 	public void OpenSetNeuronParametersBox(GameObject neuron) {
 		setNeuronParameters.SetActive(true);
+		inDialogue = true;
 		neuronToSetRef = neuron;
 	}
 
 	public void CloseSetNeuronParametersBox() {
 		setNeuronParameters.SetActive(false);
+		inDialogue = false;
 	}
 }

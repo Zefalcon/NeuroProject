@@ -15,9 +15,9 @@ public class Controller : NetworkBehaviour {
 	private float hardNeuralCooldown = 1f;
 	private float softNeuralCooldown = 3f;
 
-
 	public List<Connection> connectionsToOthers;
 	public TableSpawnNetworkManager manager;
+	public CameraSwapper swapper;
 
 	[SyncVar]
 	private int tableNum;
@@ -93,7 +93,9 @@ public class Controller : NetworkBehaviour {
 
 		if (isLocalPlayer) {
 			manager = GameObject.FindObjectOfType<TableSpawnNetworkManager>();
+			swapper = GameObject.FindObjectOfType<CameraSwapper>();
 			transform.position = manager.GetSpawnPosition();
+			Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, Camera.main.transform.position.z);
 			int[] pos = manager.GetPositionIdentities(); //Fails (Instructor) if client
 			tableNum = pos[0];
 			seatNum = pos[1];
@@ -171,35 +173,75 @@ public class Controller : NetworkBehaviour {
 
 		if (isInstructor || isServer) {
 			//Only instructor OR server can save/load the game
-			if (Input.GetKeyDown(KeyCode.End) || Input.GetKeyDown(KeyCode.F1)) {
+			if (Input.GetKeyDown(KeyCode.End) || Input.GetKeyDown(KeyCode.S)) {
 				//Save the game
 				CmdSaveGame(false);
 			}
-			if (Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.F3)) {
+			if (Input.GetKeyDown(KeyCode.B)) {
 				//Backup save
 				CmdSaveGame(true);
 			}
-			if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.F2)) {
+			if (Input.GetKeyDown(KeyCode.Return)) {
 				//Load the game
 				CmdLoadGame();
 			}
-			if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.F4)) {
+			if (Input.GetKeyDown(KeyCode.LeftShift)) {
 				//Load backup
 				CmdLoadBackup();
 			}
-			if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.F5)) {
+			if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace)) {
 				//Remove all connections and start fresh
 				CmdResetConnections();
 			}
 		}
+		var x = Input.GetAxis("Horizontal") * Time.deltaTime * 3.0f;
+		var y = Input.GetAxis("Vertical") * Time.deltaTime * 3.0f;
+		Camera.main.transform.Translate(x, 0, 0);
+		Camera.main.transform.Translate(0, y, 0);
 
-		Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, Camera.main.transform.position.z);
+		/*Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, Camera.main.transform.position.z);
 
 		var x = Input.GetAxis("Horizontal") * Time.deltaTime * 3.0f;
 		var y = Input.GetAxis("Vertical") * Time.deltaTime * 3.0f;
 
 		transform.Translate(x, 0, 0);
-		transform.Translate(0, y, 0);
+		transform.Translate(0, y, 0);*/
+
+		//Switch between main views and basic view
+		if (!UIManager.inDialogue) {
+			if (Input.GetKeyDown(KeyCode.Keypad1) || Input.GetKeyDown(KeyCode.Alpha1)) {
+				//Set to table 1 view
+				swapper.SwapCamera(1);
+			}
+			else if (Input.GetKeyDown(KeyCode.Keypad2) || Input.GetKeyDown(KeyCode.Alpha2)) {
+				//Set to table 2 view
+				swapper.SwapCamera(2);
+			}
+			else if (Input.GetKeyDown(KeyCode.Keypad3) || Input.GetKeyDown(KeyCode.Alpha3)) {
+				//Set to table 3 view
+				swapper.SwapCamera(3);
+			}
+			else if (Input.GetKeyDown(KeyCode.Keypad4) || Input.GetKeyDown(KeyCode.Alpha4)) {
+				//Set to table 4 view
+				swapper.SwapCamera(4);
+			}
+			else if (Input.GetKeyDown(KeyCode.Keypad5) || Input.GetKeyDown(KeyCode.Alpha5)) {
+				//Set to table 5 view
+				swapper.SwapCamera(5);
+			}
+			else if (Input.GetKeyDown(KeyCode.Keypad6) || Input.GetKeyDown(KeyCode.Alpha6)) {
+				//Set to table 6 view
+				swapper.SwapCamera(6);
+			}
+			else if (Input.GetKeyDown(KeyCode.Keypad7) || Input.GetKeyDown(KeyCode.Alpha7)) {
+				//Set to original view
+				swapper.SwapCamera(7);
+			}
+			else if (Input.GetKeyDown(KeyCode.Keypad0) || Input.GetKeyDown(KeyCode.Alpha0)) {
+				//Set to insect view
+				swapper.SwapCamera(0);
+			}
+		}
 
 		if (!isInstructor) {
 
@@ -283,11 +325,11 @@ public class Controller : NetworkBehaviour {
 
 	[Command]
 	public void CmdSetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod) {
-		Controller c = neuron.GetComponent<Controller>();
-		c.SetThreshold(regularThreshold);
-		c.SetHighThreshold(highThreshold);
-		c.SetAbsRefractoryPd(absoluteRefractoryPeriod);
-		c.SetRelRefractoryPd(relativeRefractoryPeriod);
+		//Controller c = neuron.GetComponent<Controller>();
+		//c.SetThreshold(regularThreshold);
+		//c.SetHighThreshold(highThreshold);
+		//c.SetAbsRefractoryPd(absoluteRefractoryPeriod);
+		//c.SetRelRefractoryPd(relativeRefractoryPeriod);
 		RpcSetNeuronParameters(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod);
 	}
 

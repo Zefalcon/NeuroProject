@@ -16,8 +16,8 @@ public class TableSpawnNetworkManager : NetworkManager {
 	[Tooltip("The required password instructors must enter")]
 	string password = "Neuron"; //Change this to change the password required.
 
-	static Vector3[] tableLocations;
-	static Vector3[] seatOffsets;
+	public static Vector3[] tableLocations;
+	public static Vector3[] seatOffsets;
 
 	/// <summary>
 	/// Tables are a hexagon shape flat end toward the front.
@@ -90,12 +90,32 @@ public class TableSpawnNetworkManager : NetworkManager {
 	public override void OnStopHost() {
 		TableSelector.gameObject.SetActive(true);
 		InstructorLogin.gameObject.SetActive(true);
+		if (UIManager.inDialogue) {
+			//Turn off all dialogue boxes
+			UIManager ui = GameObject.Find("UIManager").GetComponent<UIManager>();
+			ui.CloseAcceptConnectionBox();
+			ui.CloseCreateSphereBox();
+			ui.CloseDeleteConnectionBox();
+			ui.CloseDeleteMuscleConnectionBox();
+			ui.CloseDeleteSensorConnectionBox();
+			ui.CloseSetNeuronParametersBox();
+		}
 		base.OnStopHost();
 	}
 
 	public override void OnClientDisconnect(NetworkConnection conn) {
 		TableSelector.gameObject.SetActive(true);
 		InstructorLogin.gameObject.SetActive(true);
+		if (UIManager.inDialogue) {
+			//Turn off all dialogue boxes
+			UIManager ui = GameObject.Find("UIManager").GetComponent<UIManager>();
+			ui.CloseAcceptConnectionBox();
+			ui.CloseCreateSphereBox();
+			ui.CloseDeleteConnectionBox();
+			ui.CloseDeleteMuscleConnectionBox();
+			ui.CloseDeleteSensorConnectionBox();
+			ui.CloseSetNeuronParametersBox();
+		}
 		base.OnClientDisconnect(conn);
 	}
 
@@ -104,12 +124,18 @@ public class TableSpawnNetworkManager : NetworkManager {
 			//Instrutors spawn at 0,0
 			tableSelected = table;
 		}
+		else {
+			tableSelected = 0;
+		}
 	}
 
 	public void SetSeatNum(int seat) {
 		if (!isInstructor) {
 			//Instructors spawn at 0,0
 			seatSelected = seat;
+		}
+		else {
+			seatSelected = 0;
 		}
 	}
 

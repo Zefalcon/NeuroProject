@@ -16,8 +16,19 @@ public class Controller : NetworkBehaviour {
 	private float softNeuralCooldown = 3f;
 
 	public List<Connection> connectionsToOthers;
+	public List<MuscleConnection> muscleConnections;
 	public TableSpawnNetworkManager manager;
 	public CameraSwapper swapper;
+
+	//Variables for choosing what controls are available (primarily for instructors to spawn and control neurons properly)
+	private bool instructorCanClick = true;
+	private bool canFire = true;
+
+	private bool isBeingControlled = false; //For Instructor-controlled neurons
+	private bool isInstructorControlled = false; //For Instructor-controlled neurons
+	private int playerIndex = 0;
+
+	private NetworkConnection actualNetworkConnection; //For use in instructor-spawned neurons.
 
 	[SyncVar]
 	private int tableNum;
@@ -46,20 +57,83 @@ public class Controller : NetworkBehaviour {
 		isInstructor = true;
 	}
 
+	public void SetClient() {
+		isInstructor = false;
+	}
+
 	public void SetThreshold(float threshold) {
 		neuralInputThreshold = threshold;
+	}
+
+	public float GetThreshold() {
+		return neuralInputThreshold;
 	}
 
 	public void SetHighThreshold(float threshold) {
 		neuralInputThresholdHigh = threshold;
 	}
 
+	public float GetHighThreshold() {
+		return neuralInputThresholdHigh;
+	}
+
 	public void SetAbsRefractoryPd(float hardCooldown) {
 		hardNeuralCooldown = hardCooldown;
 	}
 
+	public float GetAbsRefractoryPd() {
+		return hardNeuralCooldown;
+	}
+
 	public void SetRelRefractoryPd(float softCooldown) {
 		softNeuralCooldown = softCooldown;
+	}
+
+	public float GetRelRefractoryPd() {
+		return softNeuralCooldown;
+	}
+
+	public void SetInstructorCanClick(bool canClick) {
+		instructorCanClick = canClick;
+	}
+
+	public void SetCanFire(bool canHazFire) {
+		canFire = canHazFire;
+	}
+
+	public void SetPlayerIndex(int index) {
+		playerIndex = index;
+	}
+
+	public int GetPlayerIndex() {
+		return playerIndex;
+	}
+
+	public void SetIsInstructorControlled() {
+		//Sets the neuron to be "on" when the instructor is elsewhere.
+		isInstructorControlled = true;
+	}
+
+	public void TransferControlAway() {
+		//Transfers control away from this.
+		SetInstructorCanClick(false);
+		SetCanFire(false);
+		isBeingControlled = false;
+	}
+
+	public void TransferControlTo(bool isInstructorSphere) {
+		//Transfers control to this.
+		SetInstructorCanClick(isInstructorSphere); //Sphere must be allowed to click as an instructor ONLY if it was originally the "instructor" sphere.
+		SetCanFire(true);
+		isBeingControlled = true;
+	}
+
+	public void SetNetworkConnection(NetworkConnection conn) {
+		actualNetworkConnection = conn;
+	}
+
+	public NetworkConnection GetNetworkConnection() {
+		return actualNetworkConnection;
 	}
 
 	public class NeuralInput {
@@ -96,16 +170,19 @@ public class Controller : NetworkBehaviour {
 			swapper = GameObject.FindObjectOfType<CameraSwapper>();
 			transform.position = manager.GetSpawnPosition();
 			Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, Camera.main.transform.position.z);
-			int[] pos = manager.GetPositionIdentities(); //Fails (Instructor) if client
+			GameObject.Find("CameraSwapper").GetComponent<CameraSwapper>().SetStartingPosition(Camera.main.transform.position);
+			int[] pos = manager.GetPositionIdentities();
 			tableNum = pos[0];
 			seatNum = pos[1];
 			isInstructor = manager.GetInstructorStatus();
 			CmdApplyPositionNumbers(gameObject, tableNum, seatNum);
 			CmdPlayerEntered(gameObject, tableNum, seatNum);
-			if (isInstructor) { //Is set for local player
+			if (isInstructor) {
 				//Engage Instructor Mode
+				GetComponent<SphereSwapper>().enabled = true; //Enable SphereSwapper so instructor can create and swap between spheres.
+				GetComponent<SphereSwapper>().AddNewSphere(true, gameObject); //Add instructor as a sphere that can be swapped to.
 				CmdEngageInstructorMode(gameObject);
-				Camera.main.gameObject.transform.position = new Vector3(0, 0, -20); //Works regardless of server/client
+				Camera.main.gameObject.transform.position = new Vector3(0, 0, -20);
 			}
 		}
 	}
@@ -113,6 +190,11 @@ public class Controller : NetworkBehaviour {
 	[Command]
 	void CmdPlayerEntered(GameObject obj, int table, int seat) {
 		GameSave.PlayerEntered(obj, table, seat, false);
+	}
+
+	//Note: Used only when instructor is creating a new sphere.  Corrects bad placement from leftover variables in the TableSpawnManager.
+	public void ApplyPositionNumbers(GameObject obj, int table, int seat) {
+		CmdApplyPositionNumbers(obj, table, seat);
 	}
 
 	[Command]
@@ -124,7 +206,7 @@ public class Controller : NetworkBehaviour {
 	[Command]
 	void CmdEngageInstructorMode(GameObject obj) {
 		obj.GetComponent<Controller>().SetInstructor();
-		obj.GetComponent<MeshRenderer>().enabled = false; //Doesn't show on other clients, but does show on own if server
+		obj.GetComponent<MeshRenderer>().enabled = false;
 		obj.GetComponent<SphereCollider>().enabled = false; //Should not be clickable
 		if (obj.GetComponentInChildren<CubeLabel>() != null) {
 			obj.GetComponentInChildren<CubeLabel>().gameObject.SetActive(false);
@@ -144,19 +226,88 @@ public class Controller : NetworkBehaviour {
 		obj.GetComponent<ConnectionManager>().isInstructor = true;
 	}
 
+	public void DisengageInstructorMode(GameObject obj) {
+		CmdDisengageInstructorMode(obj);
+	}
+
+	[Command]
+	void CmdDisengageInstructorMode(GameObject obj) {
+		obj.GetComponent<Controller>().SetClient();
+		obj.GetComponent<MeshRenderer>().enabled = true;
+		obj.GetComponent<SphereCollider>().enabled = true;
+		if(obj.GetComponentInChildren<CubeLabel>(true) != null) {
+			obj.GetComponentInChildren<CubeLabel>(true).gameObject.SetActive(true);
+		}
+		obj.GetComponent<ConnectionManager>().isInstructor = false;
+		RpcDisengageInstructorMode(obj);
+	}
+
+	[ClientRpc]
+	void RpcDisengageInstructorMode(GameObject obj) {
+		obj.GetComponent<Controller>().SetClient();
+		obj.GetComponent<MeshRenderer>().enabled = true;
+		obj.GetComponent<SphereCollider>().enabled = true;
+		if (obj.GetComponentInChildren<CubeLabel>(true) != null) {
+			obj.GetComponentInChildren<CubeLabel>(true).gameObject.SetActive(true);
+		}
+		obj.GetComponent<ConnectionManager>().isInstructor = false;
+	}
+
 	// Update is called once per frame
 	void Update() {
 
+		if(isInstructorControlled && !isBeingControlled) {
+			//Make sure firing is checked even if instructor is controlling something else
+			//Check if fired due to connections
+			float threshold = float.MaxValue;
+			if (Time.time < last_firing + hardNeuralCooldown) {
+				//Do NOT fire.  Keep threshold at infinity
+			}
+			else if (Time.time < last_firing + hardNeuralCooldown + softNeuralCooldown) {
+				//Threshold is high.
+				threshold = neuralInputThresholdHigh;
+			}
+			else {
+				//Threshold is normal
+				threshold = neuralInputThreshold;
+			}
+			float combinedInputStrength = 0;
+			for (int i = 0; i < currentInputs.Count; i++) {
+				if (currentInputs[i].IsCurrent(Time.time)) {
+					combinedInputStrength += currentInputs[i].Strength();
+				}
+				else {
+					//Remove old input to streamline
+					currentInputs.Remove(currentInputs[i]);
+				}
+			}
+			if (combinedInputStrength >= threshold) {
+				last_firing = Time.time;
+				ColorChangeParser(new ColorChanger(transform.gameObject, changedColor), false);
+			}
+		}
+
 		if (!isLocalPlayer) {
-			return;
+			if (!isBeingControlled) { //If not currently being controlled by the Instructor
+				return;
+			}
+		}
+
+		if (!isInstructor) {
+			//Ensure proper appearance
+			if (!GetComponent<MeshRenderer>().enabled || !GetComponentInChildren<CubeLabel>().gameObject.activeInHierarchy) { //Make sure appearance is only altered when necessary.
+				CmdDisengageInstructorMode(gameObject);
+			}
 		}
 
 		if (isInstructor) {
 			//Ensure proper appearance
-			CmdEngageInstructorMode(gameObject);
+			if (GetComponent<MeshRenderer>().enabled) { //Make sure appearance is only altered when necessary.
+				CmdEngageInstructorMode(gameObject);
+			}
 
 			//Instructors can click on players to set their refractory variables
-			if (Input.GetMouseButtonUp(0)) {
+			if (instructorCanClick && Input.GetMouseButtonUp(0)) {
 				if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) {
 					Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 					RaycastHit hit;
@@ -172,40 +323,34 @@ public class Controller : NetworkBehaviour {
 		}
 
 		if (isInstructor || isServer) {
-			//Only instructor OR server can save/load the game
-			if (Input.GetKeyDown(KeyCode.End) || Input.GetKeyDown(KeyCode.S)) {
-				//Save the game
-				CmdSaveGame(false);
-			}
-			if (Input.GetKeyDown(KeyCode.B)) {
-				//Backup save
-				CmdSaveGame(true);
-			}
-			if (Input.GetKeyDown(KeyCode.Return)) {
-				//Load the game
-				CmdLoadGame();
-			}
-			if (Input.GetKeyDown(KeyCode.LeftShift)) {
-				//Load backup
-				CmdLoadBackup();
-			}
-			if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace)) {
-				//Remove all connections and start fresh
-				CmdResetConnections();
+			if (!UIManager.inDialogue) {
+				//Only instructor OR server can save/load the game
+				if (Input.GetKeyDown(KeyCode.End) || Input.GetKeyDown(KeyCode.S)) {
+					//Save the game
+					CmdSaveGame(false);
+				}
+				if (Input.GetKeyDown(KeyCode.B)) {
+					//Backup save
+					CmdSaveGame(true);
+				}
+				if (Input.GetKeyDown(KeyCode.Return)) {
+					//Load the game
+					CmdLoadGame();
+				}
+				if (Input.GetKeyDown(KeyCode.LeftShift)) {
+					//Load backup
+					CmdLoadBackup();
+				}
+				if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace)) {
+					//Remove all connections and start fresh
+					CmdResetConnections();
+				}
 			}
 		}
 		var x = Input.GetAxis("Horizontal") * Time.deltaTime * 3.0f;
 		var y = Input.GetAxis("Vertical") * Time.deltaTime * 3.0f;
 		Camera.main.transform.Translate(x, 0, 0);
 		Camera.main.transform.Translate(0, y, 0);
-
-		/*Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, Camera.main.transform.position.z);
-
-		var x = Input.GetAxis("Horizontal") * Time.deltaTime * 3.0f;
-		var y = Input.GetAxis("Vertical") * Time.deltaTime * 3.0f;
-
-		transform.Translate(x, 0, 0);
-		transform.Translate(0, y, 0);*/
 
 		//Switch between main views and basic view
 		if (!UIManager.inDialogue) {
@@ -234,11 +379,11 @@ public class Controller : NetworkBehaviour {
 				swapper.SwapCamera(6);
 			}
 			else if (Input.GetKeyDown(KeyCode.Keypad7) || Input.GetKeyDown(KeyCode.Alpha7)) {
-				//Set to original view
+				//Set to insect view
 				swapper.SwapCamera(7);
 			}
 			else if (Input.GetKeyDown(KeyCode.Keypad0) || Input.GetKeyDown(KeyCode.Alpha0)) {
-				//Set to insect view
+				//Set to original view
 				swapper.SwapCamera(0);
 			}
 		}
@@ -246,7 +391,7 @@ public class Controller : NetworkBehaviour {
 		if (!isInstructor) {
 
 			//Check if manually fired
-			if (Input.GetKeyDown(KeyCode.Space)) {
+			if (canFire && Input.GetKeyDown(KeyCode.Space)) {
 				last_firing = Time.time;
 				ColorChangeParser(new ColorChanger(transform.gameObject, changedColor), false);
 			}
@@ -325,11 +470,6 @@ public class Controller : NetworkBehaviour {
 
 	[Command]
 	public void CmdSetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod) {
-		//Controller c = neuron.GetComponent<Controller>();
-		//c.SetThreshold(regularThreshold);
-		//c.SetHighThreshold(highThreshold);
-		//c.SetAbsRefractoryPd(absoluteRefractoryPeriod);
-		//c.SetRelRefractoryPd(relativeRefractoryPeriod);
 		RpcSetNeuronParameters(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod);
 	}
 
@@ -340,6 +480,7 @@ public class Controller : NetworkBehaviour {
 		c.SetHighThreshold(highThreshold);
 		c.SetAbsRefractoryPd(absoluteRefractoryPeriod);
 		c.SetRelRefractoryPd(relativeRefractoryPeriod);
+		GameSave.NeuronParametersChanged(neuron.GetComponent<Controller>());
 	}
 
 	public void ColorChangeParser(ColorChanger toChange, bool delayed) {
@@ -353,6 +494,13 @@ public class Controller : NetworkBehaviour {
 		for (int i = 0; i < connectionsToOthers.Count; i++) {
 			if (connectionsToOthers[i].GetEnd() != null) {
 				CmdNeuronFired(connectionsToOthers[i].GetEnd(), connectionsToOthers[i].connectionStrength);
+			}
+		}
+
+		for (int i=0; i < muscleConnections.Count; i++) {
+			if (muscleConnections[i].GetEnd() != null) {
+				CmdNeuronFiredMuscle(muscleConnections[i].GetEnd());
+				//muscleConnections[i].GetEnd().GetComponent<Muscle>().currentInputs.Add(new Muscle.Input(Time.time));  //TODO: Do we need this?
 			}
 		}
 	}
@@ -398,13 +546,31 @@ public class Controller : NetworkBehaviour {
 
 	[Command]
 	void CmdNeuronFired(GameObject toInform, float strength) {
-		TargetNeuronFired(toInform.GetComponent<Controller>().connectionToClient, strength);
+		if(toInform.GetComponent<Controller>().connectionToClient == null) {
+			//Instructor-spawned
+			TargetNeuronFired(toInform.GetComponent<Controller>().GetNetworkConnection(), toInform, strength);
+		}
+		else {
+			TargetNeuronFired(toInform.GetComponent<Controller>().connectionToClient, toInform, strength);
+		}
 	}
 
 	[TargetRpc]
-	void TargetNeuronFired(NetworkConnection toInform, float strength) {
-		GameObject informed = toInform.playerControllers[0].gameObject;
-		informed.GetComponent<Controller>().currentInputs.Add(new NeuralInput(strength, Time.time));
+	void TargetNeuronFired(NetworkConnection network, GameObject toInform, float strength) {
+		toInform.GetComponent<Controller>().currentInputs.Add(new NeuralInput(strength, Time.time));
+	}
+
+	[Command]
+	void CmdNeuronFiredMuscle(GameObject toInform) {
+		Muscle informed = toInform.GetComponent<Muscle>();
+		informed.currentInputs.Add(new Muscle.Input(Time.time));
+		//RpcNeuronFiredMuscle(toInform);  //TODO: Do we need this?
+	}
+
+	[ClientRpc]
+	void RpcNeuronFiredMuscle(GameObject toInform) {
+		Muscle informed = toInform.GetComponent<Muscle>();
+		informed.currentInputs.Add(new Muscle.Input(Time.time));
 	}
 
 	public void RemoveConnection(GameObject removeFrom, GameObject toRemove) {
@@ -423,6 +589,27 @@ public class Controller : NetworkBehaviour {
 			List<Connection> connections = obj.GetComponent<Controller>().connectionsToOthers;
 			if(connections != null && toRemove != null) {
 				connections.Remove(toRemove.GetComponent<Connection>());
+			}
+		}
+		NetworkServer.Destroy(toRemove);
+	}
+
+	public void RemoveMuscleConnection(GameObject removeFrom, GameObject toRemove) {
+		CmdRemoveMuscleConnection(removeFrom, toRemove);
+	}
+
+	[Command]
+	void CmdRemoveMuscleConnection(GameObject obj, GameObject toRemove) {
+		obj.GetComponent<Controller>().muscleConnections.Remove(toRemove.GetComponent<MuscleConnection>());
+		RpcRemoveMuscleConnection(obj, toRemove);
+	}
+
+	[ClientRpc]
+	void RpcRemoveMuscleConnection(GameObject obj, GameObject toRemove) {
+		if (obj != null) {
+			List<MuscleConnection> connections = obj.GetComponent<Controller>().muscleConnections;
+			if (connections != null && toRemove != null) {
+				connections.Remove(toRemove.GetComponent<MuscleConnection>());
 			}
 		}
 		NetworkServer.Destroy(toRemove);

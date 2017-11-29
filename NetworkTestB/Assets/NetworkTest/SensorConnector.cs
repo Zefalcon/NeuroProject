@@ -6,6 +6,8 @@ public class SensorConnector : MonoBehaviour {
 
 	public Sensor sensor;
 
+	public int table;
+
 	// Use this for initialization
 	void Start () {
 		
@@ -19,5 +21,9 @@ public class SensorConnector : MonoBehaviour {
 	public void AttachToSensor(Controller neuron) {
 		//Attaches given neuron to sensor contained within
 		sensor.ConnectToNeuron(neuron);
+	}
+
+	public void DetachFromSensor(Controller neuron) {
+		sensor.DisconnectFromNeuron(neuron);
 	}
 }

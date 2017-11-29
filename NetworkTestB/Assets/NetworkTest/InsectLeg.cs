@@ -1,80 +1,101 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
-public class InsectLeg : MonoBehaviour {
+public class InsectLeg : NetworkBehaviour {
 
-	public enum Direction {
-		Forward, Backward, FootUp, FootDown, Still
+	public enum FootPosition {
+		FootUp, FootDown
 	}
 
 	public int forward; //Which direction is "forward"?  1 if positive z rotation, -1 if negative z rotation
 
-	Direction legMotion = Direction.Still;
-	Direction footPosition = Direction.FootDown;
+	float speed = 0f;
+
+	FootPosition footPosition = FootPosition.FootUp;
+	bool positionChanged = false; //Ensure code only run if position just changed.
+	public bool canRotateForward = true;
+	public bool canRotateBackward = true;
 
 	public GameObject foot;
 
 	// Use this for initialization
 	void Start () {
-		
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		switch (legMotion) {
-			case (Direction.Forward): {
-					transform.Rotate(Vector3.back, forward);
-					break;
-				}
-			case (Direction.Backward): {
-					transform.Rotate(Vector3.back, -forward);
-					break;
-				}
-			case (Direction.Still): {
-					transform.Rotate(Vector3.back, 0f);
-					break;
-				}
+		bool rotate = false;
+		if(forward*speed > 0) {
+			//Trying to move forward (positive speed and forward direction or negative speed and forward direction)
+			if (canRotateForward) {
+				rotate = true;
+			}
 		}
-		switch (footPosition) {
-			case (Direction.FootDown): {
-					foot.SetActive(true);
-					break;
-				}
-			case (Direction.FootUp): {
-					foot.SetActive(false);
-					break;
-				}
+		else {
+			//Trying to move backward (positive speed and negative forward direction or negative speed and positive forward direction)
+			if (canRotateBackward) {
+				rotate = true;
+			}
 		}
 
-		//Testing
-		/*if (Input.GetKeyDown(KeyCode.F)) {
-			RotateForward();
+		if (rotate) {
+			transform.Rotate(Vector3.back, speed);
 		}
-		if (Input.GetKeyDown(KeyCode.B)) {
-			RotateBackward();
+
+		if (positionChanged) {
+			switch (footPosition) {
+				case (FootPosition.FootDown): {
+						CmdFootPosition(foot, true);
+						break;
+					}
+				case (FootPosition.FootUp): {
+						CmdFootPosition(foot, false);
+						break;
+					}
+			}
+			positionChanged = false;
 		}
-		if (Input.GetKeyDown(KeyCode.U)) {
-			SetFootUp();
-		}
-		if (Input.GetKeyDown(KeyCode.D)) {
-			SetFootDown();
-		}*/
+	}
+
+	[Command]
+	void CmdFootPosition(GameObject foot, bool down) {
+		foot.SetActive(down);
+		RpcFootPosition(foot, down);
+	}
+
+	[ClientRpc]
+	void RpcFootPosition(GameObject foot, bool down) {
+		foot.SetActive(down);
 	}
 
 	public void RotateForward() {
-		legMotion = Direction.Forward;
+		//Add motion in the forward direction
+		speed += (forward * 0.05f);
 	}
 
 	public void RotateBackward() {
-		legMotion = Direction.Backward;
+		//Add motion in the backward direction
+		speed -= (forward * 0.05f);
+	}
+
+	public void Halt(bool stopForward) {
+		if (stopForward) { //Forward motion to be stopped.  Apply backward motion.
+			RotateBackward();
+		}
+		else { //Backward motion to be stopped. Apply forward motion.
+			RotateForward();
+		}
 	}
 
 	public void SetFootDown() {
-		footPosition = Direction.FootDown;
+		footPosition = FootPosition.FootDown;
+		positionChanged = true;
 	}
 
 	public void SetFootUp() {
-		footPosition = Direction.FootUp;
+		footPosition = FootPosition.FootUp;
+		positionChanged = true;
 	}
 }

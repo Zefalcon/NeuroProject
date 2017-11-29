@@ -4,51 +4,27 @@ using UnityEngine;
 
 public class CameraSwapper : MonoBehaviour {
 
-	public Camera[] tableCams;
+	public Transform[] camPositions;
+	Vector3 originalPosition;
 	public Camera standardCamera;
 
+	private void Start() {
+		originalPosition = standardCamera.transform.position;
+	}
+
 	public void SwapCamera(int camera) {
-		foreach (Camera c in tableCams) {
-			c.enabled = false;
+		//Swap cameras position.  0 is original camera, 1-6 are the 6 tables, and 7 is the insect cam.
+		if(camera == 0) {
+			//Original cam
+			Camera.main.transform.position = originalPosition;
 		}
-		standardCamera.enabled = false;
-		switch (camera) {
-			case (1): {
-					tableCams[0].enabled = true;
-					break;
-				}
-			case (2): {
-					tableCams[1].enabled = true;
-					break;
-				}
-			case (3): {
-					tableCams[2].enabled = true;
-					break;
-				}
-			case (4): {
-					tableCams[3].enabled = true;
-					break;
-				}
-			case (5): {
-					tableCams[4].enabled = true;
-					break;
-				}
-			case (6): {
-					tableCams[5].enabled = true;
-					break;
-				}
-			case (0): {
-					tableCams[6].enabled = true;
-					break;
-				}
-			case (7): {
-					standardCamera.enabled = true;
-					break;
-				}
-			default: {
-					standardCamera.enabled = true;
-					break;
-				}
+		else if(camera > 0 && camera < 8) {
+			//Table or insect cam
+			Camera.main.transform.position = camPositions[camera - 1].position;
 		}
+	}
+
+	public void SetStartingPosition(Vector3 start) {
+		originalPosition = start;
 	}
 }

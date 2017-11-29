@@ -1,3 +1,4 @@
-Start(Tbl1 Seat3) End(Tbl1 Seat1) Str-2
-Start(Tbl1 Seat2) End(Tbl1 Seat3) Str5
-Start(Tbl1 Seat1) End(Tbl1 Seat2) Str7
+Neuron(Tbl0 Seat0) Rest10 Rec20 Abs1 Rel3
+Neuron(Tbl1 Seat1) Rest1 Rec2 Abs3 Rel4
+Neuron(Tbl1 Seat2) Rest5 Rec6 Abs7 Rel8
+Neuron(Tbl1 Seat3) Rest30 Rec8.9158 Abs5.5 Rel7

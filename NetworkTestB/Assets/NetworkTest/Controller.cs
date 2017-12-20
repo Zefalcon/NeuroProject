@@ -9,10 +9,14 @@ public class Controller : NetworkBehaviour {
 	private Color defaultColor;
 	private GameObject tableSelector;
 	public List<NeuralInput> currentInputs;
+	[SyncVar]
 	private float neuralInputThreshold = 10f;
+	[SyncVar]
 	private float neuralInputThresholdHigh = 20f;
 	private float last_firing = -100f;
+	[SyncVar]
 	private float hardNeuralCooldown = 1f;
+	[SyncVar]
 	private float softNeuralCooldown = 3f;
 
 	public List<Connection> connectionsToOthers;
@@ -55,6 +59,10 @@ public class Controller : NetworkBehaviour {
 
 	public void SetInstructor() {
 		isInstructor = true;
+	}
+
+	public bool IsInstructor() {
+		return isInstructor;
 	}
 
 	public void SetClient() {
@@ -143,6 +151,7 @@ public class Controller : NetworkBehaviour {
 		public NeuralInput(float strength, float timeReceived) {
 			this.strength = strength;
 			this.timeReceived = timeReceived;
+			Debug.Log("Input received: " + strength);
 		}
 		public float Strength() {
 			return strength;
@@ -169,12 +178,14 @@ public class Controller : NetworkBehaviour {
 			manager = GameObject.FindObjectOfType<TableSpawnNetworkManager>();
 			swapper = GameObject.FindObjectOfType<CameraSwapper>();
 			transform.position = manager.GetSpawnPosition();
+			CmdSetPlayerPosition(gameObject, manager.GetSpawnPosition());
 			Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, Camera.main.transform.position.z);
 			GameObject.Find("CameraSwapper").GetComponent<CameraSwapper>().SetStartingPosition(Camera.main.transform.position);
 			int[] pos = manager.GetPositionIdentities();
 			tableNum = pos[0];
 			seatNum = pos[1];
 			isInstructor = manager.GetInstructorStatus();
+			isBeingControlled = true;
 			CmdApplyPositionNumbers(gameObject, tableNum, seatNum);
 			CmdPlayerEntered(gameObject, tableNum, seatNum);
 			if (isInstructor) {
@@ -185,6 +196,11 @@ public class Controller : NetworkBehaviour {
 				Camera.main.gameObject.transform.position = new Vector3(0, 0, -20);
 			}
 		}
+	}
+
+	[Command]
+	void CmdSetPlayerPosition(GameObject obj, Vector3 position) {
+		obj.transform.position = position;
 	}
 
 	[Command]
@@ -205,7 +221,7 @@ public class Controller : NetworkBehaviour {
 
 	[Command]
 	void CmdEngageInstructorMode(GameObject obj) {
-		obj.GetComponent<Controller>().SetInstructor();
+		obj.GetComponent<Controller>().SetInstructor(); //TODO: Is this necessary?
 		obj.GetComponent<MeshRenderer>().enabled = false;
 		obj.GetComponent<SphereCollider>().enabled = false; //Should not be clickable
 		if (obj.GetComponentInChildren<CubeLabel>() != null) {
@@ -255,7 +271,6 @@ public class Controller : NetworkBehaviour {
 
 	// Update is called once per frame
 	void Update() {
-
 		if(isInstructorControlled && !isBeingControlled) {
 			//Make sure firing is checked even if instructor is controlling something else
 			//Check if fired due to connections
@@ -345,6 +360,11 @@ public class Controller : NetworkBehaviour {
 					//Remove all connections and start fresh
 					CmdResetConnections();
 				}
+				if (Input.GetKeyDown(KeyCode.O)) {
+					//Spawn all neurons in loaded file
+					//GameSave.SpawnAllInstructorNeurons(GetComponent<SphereSwapper>());
+					CmdSpawnAllNeurons(gameObject);
+				}
 			}
 		}
 		var x = Input.GetAxis("Horizontal") * Time.deltaTime * 3.0f;
@@ -395,7 +415,6 @@ public class Controller : NetworkBehaviour {
 				last_firing = Time.time;
 				ColorChangeParser(new ColorChanger(transform.gameObject, changedColor), false);
 			}
-
 			//Check if fired due to connections
 			float threshold = float.MaxValue;
 			if (Time.time < last_firing + hardNeuralCooldown) {
@@ -455,6 +474,11 @@ public class Controller : NetworkBehaviour {
 	}
 
 	[Command]
+	public void CmdSpawnAllNeurons(GameObject swapper) {
+		GameSave.SpawnAllInstructorNeurons(swapper.GetComponent<SphereSwapper>());
+	}
+
+	[Command]
 	public void CmdOpenSetNeuronParameters(GameObject instructor, GameObject neuron) {
 		TargetOpenSetNeuronParameters(instructor.GetComponent<Controller>().connectionToClient, neuron);
 	}
@@ -464,23 +488,33 @@ public class Controller : NetworkBehaviour {
 		GameObject.Find("UIManager").GetComponent<UIManager>().OpenSetNeuronParametersBox(neuron);
 	}
 
-	public void SetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod) {
-		CmdSetNeuronParameters(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod);
+	public void SetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod, bool alertSave) {
+		CmdSetNeuronParameters(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod, alertSave);
 	}
 
 	[Command]
-	public void CmdSetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod) {
+	public void CmdSetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod, bool alertSave) {
+		Controller c = neuron.GetComponent<Controller>();
+		//Debug.Log("Command: " + regularThreshold);
+		c.SetThreshold(regularThreshold);
+		c.SetHighThreshold(highThreshold);
+		c.SetAbsRefractoryPd(absoluteRefractoryPeriod);
+		c.SetRelRefractoryPd(relativeRefractoryPeriod);
+		if (alertSave) {
+			//Is this a change from an instructor, or from a loaded save file?
+			GameSave.NeuronParametersChanged(neuron.GetComponent<Controller>()); //TODO: Does this need to be in RPC, or is here best?
+		}
 		RpcSetNeuronParameters(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod);
 	}
 
 	[ClientRpc]
 	public void RpcSetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod) {
+		//Debug.Log("Client: " + regularThreshold);
 		Controller c = neuron.GetComponent<Controller>();
 		c.SetThreshold(regularThreshold);
 		c.SetHighThreshold(highThreshold);
 		c.SetAbsRefractoryPd(absoluteRefractoryPeriod);
 		c.SetRelRefractoryPd(relativeRefractoryPeriod);
-		GameSave.NeuronParametersChanged(neuron.GetComponent<Controller>());
 	}
 
 	public void ColorChangeParser(ColorChanger toChange, bool delayed) {

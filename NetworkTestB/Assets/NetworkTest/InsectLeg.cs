@@ -19,10 +19,6 @@ public class InsectLeg : NetworkBehaviour {
 	public bool canRotateBackward = true;
 
 	public GameObject foot;
-
-	// Use this for initialization
-	void Start () {
-	}
 	
 	// Update is called once per frame
 	void Update () {
@@ -47,11 +43,13 @@ public class InsectLeg : NetworkBehaviour {
 		if (positionChanged) {
 			switch (footPosition) {
 				case (FootPosition.FootDown): {
-						CmdFootPosition(foot, true);
+						SetFootPosition(gameObject, true);
+						//CmdFootPosition(foot, true);
 						break;
 					}
 				case (FootPosition.FootUp): {
-						CmdFootPosition(foot, false);
+						SetFootPosition(gameObject, false);
+						//CmdFootPosition(foot, false);
 						break;
 					}
 			}
@@ -59,25 +57,33 @@ public class InsectLeg : NetworkBehaviour {
 		}
 	}
 
+	void SetFootPosition(GameObject leg, bool down) {
+		//leg.GetComponent<InsectLeg>().foot.SetActive(down);
+		//foot.SetActive(down);
+		CmdFootPosition(leg, down);
+	}
+
 	[Command]
-	void CmdFootPosition(GameObject foot, bool down) {
-		foot.SetActive(down);
-		RpcFootPosition(foot, down);
+	void CmdFootPosition(GameObject leg, bool down) {
+		leg.GetComponent<InsectLeg>().foot.SetActive(down);
+		//foot.SetActive(down);
+		RpcFootPosition(leg, down);
 	}
 
 	[ClientRpc]
-	void RpcFootPosition(GameObject foot, bool down) {
-		foot.SetActive(down);
+	void RpcFootPosition(GameObject leg, bool down) {
+		leg.GetComponent<InsectLeg>().foot.SetActive(down);
+		//foot.SetActive(down);
 	}
 
 	public void RotateForward() {
 		//Add motion in the forward direction
-		speed += (forward * 0.05f);
+		speed += (forward * 0.2f);
 	}
 
 	public void RotateBackward() {
 		//Add motion in the backward direction
-		speed -= (forward * 0.05f);
+		speed -= (forward * 0.2f);
 	}
 
 	public void Halt(bool stopForward) {

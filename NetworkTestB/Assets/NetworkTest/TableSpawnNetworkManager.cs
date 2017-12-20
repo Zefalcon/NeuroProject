@@ -57,16 +57,6 @@ public class TableSpawnNetworkManager : NetworkManager {
 		tableLocations[6] = new Vector3(HORIZONTAL_TABLE_OFFSET, -VERTICAL_TABLE_OFFSET, 0);
 	}
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
 	public override void OnServerAddPlayer(NetworkConnection conn, short playerControllerId) {
 		OnServerAddPlayer(conn, playerControllerId, null);
 	}

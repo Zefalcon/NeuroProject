@@ -15,15 +15,6 @@ public class Sensor : MonoBehaviour {
 	public InsectLeg leg;
 	public SensorLocation location;
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	}
-
 	public void ConnectToNeuron(Controller neuron) {
 		output.Add(neuron);
 	}

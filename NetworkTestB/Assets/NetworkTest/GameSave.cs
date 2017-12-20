@@ -659,6 +659,7 @@ public static class GameSave {
 		spawnedConnections = new List<ConnectionFile>(); //Must be reset on load so ghost connections don't pop back up.
 		spawnedSensorConnections = new List<SensorConnectionFile>();
 		spawnedMuscleConnections = new List<MuscleConnectionFile>();
+		adjustedNeuronSettings = new List<NeuronFile>();
 
 		//Spawn connections for players already in scene.
 		foreach (NeuronDesignation nd in loadedPlayers) {
@@ -695,23 +696,36 @@ public static class GameSave {
 
 		//Set parameters
 		NeuronFile remove = null;
+		//Debug.Log("Checking for " + table + "," + seat);
 		foreach (NeuronFile file in neuronSettingsToLoad) {
 			//Check table and seat
 			if (file.GetTableNum().Equals(table) && file.GetSeatNum().Equals(seat)) {
 				//Neuron found!  Set parameters
-				obj.GetComponent<Controller>().SetNeuronParameters(obj, file.GetRestingThreshold(), file.GetRecoveryThreshold(), file.GetAbsoluteRefractoryPeriod(), file.GetRelativeRefractoryPeriod());
+				//Debug.Log("Found " + table + "," + seat);
+				//Debug.Log("Variables:" + file.GetRestingThreshold());
+				obj.GetComponent<Controller>().SetNeuronParameters(obj, file.GetRestingThreshold(), file.GetRecoveryThreshold(), file.GetAbsoluteRefractoryPeriod(), file.GetRelativeRefractoryPeriod(), false);
 				remove = file;
 			}
 		}
+		//Also check already created ones if nothing found
+		if (remove == null) {
+			foreach (NeuronFile created in adjustedNeuronSettings) {
+				if (created.GetTableNum().Equals(table) && created.GetSeatNum().Equals(seat)) {
+					//Debug.Log("Found " + table + "," + seat);
+					//Debug.Log("Variables:" + created.GetRestingThreshold());
+					obj.GetComponent<Controller>().SetNeuronParameters(obj, created.GetRestingThreshold(), created.GetRecoveryThreshold(), created.GetAbsoluteRefractoryPeriod(), created.GetRelativeRefractoryPeriod(), false);
+					remove = created;
+				}
+			}
+		}
+
 		//Move completed file
 		if (remove != null) {
 			adjustedNeuronSettings.Add(remove);
+			neuronSettingsToLoad.Remove(remove);
 		}
 		else {
-			//No file found, so make one
-			Controller cont = obj.GetComponent<Controller>();
-			NeuronFile newFile = new NeuronFile(table, seat, cont.GetThreshold(), cont.GetHighThreshold(), cont.GetAbsRefractoryPd(), cont.GetRelRefractoryPd());
-			adjustedNeuronSettings.Add(newFile);
+			//No file found.  No need to make one for default values.
 		}
 
 
@@ -991,21 +1005,20 @@ public static class GameSave {
 	//Updates file for given neuron
 	public static void NeuronParametersChanged(Controller neuron) {
 		NeuronFile toReplace = null;
-		NeuronFile toAdd = null;
+		NeuronFile newFile = new NeuronFile(neuron.GetTableNum(), neuron.GetSeatNum(), neuron.GetThreshold(), neuron.GetHighThreshold(), neuron.GetAbsRefractoryPd(), neuron.GetRelRefractoryPd());
 		foreach (NeuronFile file in adjustedNeuronSettings) {
 			if(file.GetTableNum().Equals(neuron.GetTableNum()) && file.GetSeatNum().Equals(neuron.GetSeatNum())){
 				//Neuron found!  Update file
-				NeuronFile newFile = new NeuronFile(neuron.GetTableNum(), neuron.GetSeatNum(), neuron.GetThreshold(), neuron.GetHighThreshold(), neuron.GetAbsRefractoryPd(), neuron.GetRelRefractoryPd());
-				toAdd = newFile;
 				toReplace = file;
 			}
 		}
 		if (toReplace != null) {
+			//File removed.
 			adjustedNeuronSettings.Remove(toReplace);
 		}
-		if (toAdd != null) {
-			adjustedNeuronSettings.Add(toAdd);
-		}
+
+		//Then add new file
+		adjustedNeuronSettings.Add(newFile);
 	}
 
 	//Helper method to spawn connections based on given connection file
@@ -1101,6 +1114,24 @@ public static class GameSave {
 		if (start && end) {
 			GameObject player = NetworkManager.singleton.client.connection.playerControllers[0].gameObject;
 			player.GetComponent<ConnectionManager>().MuscleConnection(start, end);
+		}
+	}
+
+	public static void SpawnAllInstructorNeurons(SphereSwapper swapper) {
+		Debug.Log("Is happening");
+		List<NeuronFile> filesToSpawn = new List<NeuronFile>();
+		foreach (NeuronFile file in neuronSettingsToLoad) {
+			/*int table = file.GetTableNum();
+			int seat = file.GetSeatNum();
+			swapper.SpawnSphere(table, seat);*/
+			filesToSpawn.Add(file);
+		}
+
+		//Spawn after finding all neurons to spawn
+		foreach (NeuronFile spawn in filesToSpawn) {
+			int table = spawn.GetTableNum();
+			int seat = spawn.GetSeatNum();
+			swapper.SpawnSphere(table, seat);
 		}
 	}
 }

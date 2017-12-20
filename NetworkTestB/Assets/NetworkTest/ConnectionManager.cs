@@ -55,7 +55,7 @@ public class ConnectionManager : NetworkBehaviour {
 			}
 		}
 
-		//Left click creates excitatory connection
+		//Left click creates connections, deletes connections
 		if (Input.GetMouseButtonUp(0)) {
 			if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) {
 				Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -217,17 +217,17 @@ public class ConnectionManager : NetworkBehaviour {
 		SensorConnection deleteConnection = toDelete.GetComponent<SensorConnection>();
 		SensorConnector presynapse = deleteConnection.GetStart().GetComponent<SensorConnector>();
 		presynapse.DetachFromSensor(deleteConnection.GetEnd().GetComponent<Controller>());
-		RpcDeleteSensorConnection(toDelete);
+		RpcDeleteSensorConnection(presynapse.gameObject, toDelete);
 		GameSave.SensorConnectionRemoved(deleteConnection);
 		deleteConnection.Destroy(false);
 	}
 
 	[ClientRpc]
-	void RpcDeleteSensorConnection(GameObject toDelete) {
+	void RpcDeleteSensorConnection(GameObject presynapse, GameObject toDelete) {
 		if (toDelete != null) {
 			SensorConnection deleteConnection = toDelete.GetComponent<SensorConnection>();
-			SensorConnector presynapse = deleteConnection.GetStart().GetComponent<SensorConnector>();
-			presynapse.DetachFromSensor(deleteConnection.GetEnd().GetComponent<Controller>());
+			//SensorConnector presynapse = deleteConnection.GetStart().GetComponent<SensorConnector>();
+			presynapse.GetComponent<SensorConnector>().DetachFromSensor(deleteConnection.GetEnd().GetComponent<Controller>());
 		}
 	}
 
@@ -253,7 +253,8 @@ public class ConnectionManager : NetworkBehaviour {
 	void CmdAskSpawnConnection(GameObject start, GameObject end) {
 		GameObject existingConnection = GameObject.Find("NewNetworkManager/Connection: " + start.name + "->" + end.name);
 		if (existingConnection == null) {
-			if(end.GetComponent<Controller>().connectionToClient == null) {
+			//Proceed
+			if (end.GetComponent<Controller>().connectionToClient == null) {
 				//Instructor-spawned sphere.  Use actual network connection
 				TargetConnectionRequest(end.GetComponent<Controller>().GetNetworkConnection(), start, end);
 			}
@@ -261,7 +262,6 @@ public class ConnectionManager : NetworkBehaviour {
 				//Regular sphere
 				TargetConnectionRequest(end.GetComponent<Controller>().connectionToClient, start, end);
 			}
-			//Proceed
 		}
 	}
 
@@ -269,6 +269,10 @@ public class ConnectionManager : NetworkBehaviour {
 	void TargetConnectionRequest(NetworkConnection network, GameObject start, GameObject end) {
 		//Receiver accepts connection
 		//Bring up interface for user to decide whether to connect
+		if (start.GetComponent<Controller>().IsInstructor()) {
+			//Do nothing
+			return;
+		}
 		GameObject.Find("UIManager").GetComponent<UIManager>().OpenAcceptConnectionBox(start, end);
 	}
 

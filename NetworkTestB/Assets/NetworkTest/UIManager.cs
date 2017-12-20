@@ -8,6 +8,7 @@ public class UIManager : MonoBehaviour {
 
 	public static bool inDialogue = false;
 
+	#region References
 	public GameObject acceptConnection;
 	GameObject connectionStartRef;  //First come, first serve.
 	GameObject connectionEndRef;
@@ -21,7 +22,9 @@ public class UIManager : MonoBehaviour {
 	public GameObject setNeuronParameters;
 	GameObject neuronToSetRef;
 	public GameObject createSphere;
+	#endregion
 
+	#region Temp Button Variables
 	//Temporary variables because Buttons can only transfer one thing at a time
 	float regThresholdTemp;
 	float highThresholdTemp;
@@ -29,17 +32,9 @@ public class UIManager : MonoBehaviour {
 	float relRefPdTemp;
 	int table;
 	int seat;
+	#endregion
 
-	// Use this for initialization
-	void Start () {
-
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
+	#region Apply UI Methods and Helpers
 	public void ApplyAcceptConnection(Text strength) {
 		//Parse strength into positive/negative
 		float str = float.Parse(strength.text);
@@ -136,7 +131,7 @@ public class UIManager : MonoBehaviour {
 
 	public void ApplyNeuronParameters() {
 		GameObject player = NetworkManager.singleton.client.connection.playerControllers[0].gameObject;
-		player.GetComponent<Controller>().SetNeuronParameters(neuronToSetRef, regThresholdTemp, highThresholdTemp, absRefPdTemp, relRefPdTemp);
+		player.GetComponent<Controller>().SetNeuronParameters(neuronToSetRef, regThresholdTemp, highThresholdTemp, absRefPdTemp, relRefPdTemp, true);
 	}
 
 	public void SetTableNum(int tableNum) {
@@ -151,7 +146,9 @@ public class UIManager : MonoBehaviour {
 		GameObject player = NetworkManager.singleton.client.connection.playerControllers[0].gameObject;
 		player.GetComponent<SphereSwapper>().SpawnSphere(table, seat);
 	}
+	#endregion
 
+	#region Toggle UI Methods
 	public void OpenAcceptConnectionBox(GameObject start, GameObject end) {
 		connectionStartRef = start;
 		connectionEndRef = end;
@@ -241,4 +238,5 @@ public class UIManager : MonoBehaviour {
 		createSphere.SetActive(false);
 		inDialogue = false;
 	}
+	#endregion
 }

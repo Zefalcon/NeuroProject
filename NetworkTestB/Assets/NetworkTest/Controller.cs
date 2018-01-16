@@ -30,7 +30,6 @@ public class Controller : NetworkBehaviour {
 
 	private bool isBeingControlled = false; //For Instructor-controlled neurons
 	private bool isInstructorControlled = false; //For Instructor-controlled neurons
-	private int playerIndex = 0;
 
 	private NetworkConnection actualNetworkConnection; //For use in instructor-spawned neurons.
 
@@ -109,14 +108,6 @@ public class Controller : NetworkBehaviour {
 		canFire = canHazFire;
 	}
 
-	public void SetPlayerIndex(int index) {
-		playerIndex = index;
-	}
-
-	public int GetPlayerIndex() {
-		return playerIndex;
-	}
-
 	public void SetIsInstructorControlled() {
 		//Sets the neuron to be "on" when the instructor is elsewhere.
 		isInstructorControlled = true;
@@ -151,7 +142,6 @@ public class Controller : NetworkBehaviour {
 		public NeuralInput(float strength, float timeReceived) {
 			this.strength = strength;
 			this.timeReceived = timeReceived;
-			Debug.Log("Input received: " + strength);
 		}
 		public float Strength() {
 			return strength;
@@ -187,13 +177,17 @@ public class Controller : NetworkBehaviour {
 			isInstructor = manager.GetInstructorStatus();
 			isBeingControlled = true;
 			CmdApplyPositionNumbers(gameObject, tableNum, seatNum);
-			CmdPlayerEntered(gameObject, tableNum, seatNum);
+			CmdPlayerEntered(gameObject, tableNum, seatNum);  //TODO: Check spawn location before this and kick out if occupied?
 			if (isInstructor) {
 				//Engage Instructor Mode
 				GetComponent<SphereSwapper>().enabled = true; //Enable SphereSwapper so instructor can create and swap between spheres.
 				GetComponent<SphereSwapper>().AddNewSphere(true, gameObject); //Add instructor as a sphere that can be swapped to.
 				CmdEngageInstructorMode(gameObject);
 				Camera.main.gameObject.transform.position = new Vector3(0, 0, -20);
+			}
+			else {
+				//Disengage Instructor Mode
+				CmdDisengageInstructorMode(gameObject);
 			}
 		}
 	}
@@ -221,7 +215,6 @@ public class Controller : NetworkBehaviour {
 
 	[Command]
 	void CmdEngageInstructorMode(GameObject obj) {
-		obj.GetComponent<Controller>().SetInstructor(); //TODO: Is this necessary?
 		obj.GetComponent<MeshRenderer>().enabled = false;
 		obj.GetComponent<SphereCollider>().enabled = false; //Should not be clickable
 		if (obj.GetComponentInChildren<CubeLabel>() != null) {
@@ -233,7 +226,6 @@ public class Controller : NetworkBehaviour {
 
 	[ClientRpc]
 	void RpcEngageInstructorMode(GameObject obj) {
-		obj.GetComponent<Controller>().SetInstructor();
 		obj.GetComponent<MeshRenderer>().enabled = false;
 		obj.GetComponent<SphereCollider>().enabled = false;
 		if (obj.GetComponentInChildren<CubeLabel>() != null) {
@@ -480,7 +472,13 @@ public class Controller : NetworkBehaviour {
 
 	[Command]
 	public void CmdOpenSetNeuronParameters(GameObject instructor, GameObject neuron) {
-		TargetOpenSetNeuronParameters(instructor.GetComponent<Controller>().connectionToClient, neuron);
+		if (instructor.GetComponent<Controller>().connectionToClient == null) {
+			//Instructor-spawned neuron.  Use actual instructor.
+			TargetOpenSetNeuronParameters(instructor.GetComponent<Controller>().GetNetworkConnection(), neuron);
+		}
+		else {
+			TargetOpenSetNeuronParameters(instructor.GetComponent<Controller>().connectionToClient, neuron);
+		}
 	}
 
 	[TargetRpc]
@@ -488,26 +486,54 @@ public class Controller : NetworkBehaviour {
 		GameObject.Find("UIManager").GetComponent<UIManager>().OpenSetNeuronParametersBox(neuron);
 	}
 
-	public void SetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod, bool alertSave) {
-		CmdSetNeuronParameters(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod, alertSave);
+	public void SetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod, bool alertSave, bool[] valuesToApply) {
+		CmdSetNeuronParameters(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod, alertSave, valuesToApply);
 	}
 
 	[Command]
-	public void CmdSetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod, bool alertSave) {
+	public void CmdSetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod, bool alertSave, bool[] valuesToApply) {
 		Controller c = neuron.GetComponent<Controller>();
-		//Debug.Log("Command: " + regularThreshold);
-		c.SetThreshold(regularThreshold);
-		c.SetHighThreshold(highThreshold);
-		c.SetAbsRefractoryPd(absoluteRefractoryPeriod);
-		c.SetRelRefractoryPd(relativeRefractoryPeriod);
-		if (alertSave) {
-			//Is this a change from an instructor, or from a loaded save file?
-			GameSave.NeuronParametersChanged(neuron.GetComponent<Controller>()); //TODO: Does this need to be in RPC, or is here best?
+
+		//RpcSetNeuronParameters(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod);
+		if (c.connectionToClient == null) {
+			//Instructor-spawned neuron.  Use actual connection
+			TargetSetNeuronParameters(c.GetNetworkConnection(), neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod, alertSave, valuesToApply);
 		}
-		RpcSetNeuronParameters(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod);
+		else {
+			TargetSetNeuronParameters(c.connectionToClient, neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod, alertSave, valuesToApply);
+		}
 	}
 
-	[ClientRpc]
+	[TargetRpc]
+	public void TargetSetNeuronParameters(NetworkConnection connection, GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod, bool alertSave, bool[] valuesToApply) {
+		Controller c = neuron.GetComponent<Controller>();
+		//Apply values that must be changed
+		if (valuesToApply[0]) {
+			c.SetThreshold(regularThreshold);
+		}
+		if (valuesToApply[1]) {
+			c.SetHighThreshold(highThreshold);
+		}
+		if (valuesToApply[2]) {
+			c.SetAbsRefractoryPd(absoluteRefractoryPeriod);
+		}
+		if (valuesToApply[3]) {
+			c.SetRelRefractoryPd(relativeRefractoryPeriod);
+		}
+
+		if (alertSave) {
+			//Is this a change from an instructor, or from a loaded save file?
+			//GameSave.NeuronParametersChanged(neuron.GetComponent<Controller>());
+			CmdAdjustGameSave(neuron);
+		}
+	}
+
+	[Command]
+	public void CmdAdjustGameSave(GameObject con) {
+		GameSave.NeuronParametersChanged(con.GetComponent<Controller>());
+	}
+
+	/*[ClientRpc]
 	public void RpcSetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod) {
 		//Debug.Log("Client: " + regularThreshold);
 		Controller c = neuron.GetComponent<Controller>();
@@ -515,7 +541,7 @@ public class Controller : NetworkBehaviour {
 		c.SetHighThreshold(highThreshold);
 		c.SetAbsRefractoryPd(absoluteRefractoryPeriod);
 		c.SetRelRefractoryPd(relativeRefractoryPeriod);
-	}
+	}*/
 
 	public void ColorChangeParser(ColorChanger toChange, bool delayed) {
 		if (delayed) {

@@ -69,10 +69,16 @@ public class SphereSwapper : NetworkBehaviour {
 		sphere.name = table + "," + seat;
 		sphere.GetComponent<Controller>().DisengageInstructorMode(sphere);
 		sphere.GetComponent<Controller>().SetNetworkConnection(instructor.GetComponent<Controller>().connectionToClient);
-		sphere.GetComponent<Controller>().SetPlayerIndex(currentIndex);
 		AddNewSphere(false, sphere);
 		GameSave.PlayerEntered(sphere, table, seat, false);
+		RpcSpawnSphere(table, seat, sphere, instructor);
 		TargetSpawnSphere(instructor.GetComponent<Controller>().connectionToClient, table, seat, sphere, instructor);
+	}
+
+	[ClientRpc]
+	void RpcSpawnSphere(int table, int seat, GameObject sphere, GameObject instructor) {
+		//TODO: Might need to add more
+		sphere.GetComponent<Controller>().DisengageInstructorMode(sphere);
 	}
 
 	[TargetRpc]
@@ -84,15 +90,14 @@ public class SphereSwapper : NetworkBehaviour {
 		sphere.GetComponent<Controller>().DisengageInstructorMode(sphere);
 		sphere.GetComponent<Controller>().ApplyPositionNumbers(sphere, table, seat);
 		sphere.GetComponent<Controller>().SetNetworkConnection(network);
-		sphere.GetComponent<Controller>().SetPlayerIndex(currentIndex);
 		instructor.GetComponent<SphereSwapper>().SwapToSphere(instructor.GetComponent<SphereSwapper>().GetNumSpheres() - 1);
 	}
 
-	[ClientRpc]
-	void RpcSpawnSphere(int table, int seat, GameObject sphere, GameObject instructor) {
+	//[ClientRpc]
+	//void RpcSpawnSphere(int table, int seat, GameObject sphere, GameObject instructor) {
 		//TODO: Try here?
-		GameSave.PlayerEntered(sphere, table, seat, false);
-	}
+	//	GameSave.PlayerEntered(sphere, table, seat, false);
+	//}
 
 	public void AddNewSphere(bool isInstructor, GameObject newSphere) {
 		//Adds new sphere to the list of spheres

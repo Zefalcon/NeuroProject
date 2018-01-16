@@ -30,6 +30,7 @@ public class UIManager : MonoBehaviour {
 	float highThresholdTemp;
 	float absRefPdTemp;
 	float relRefPdTemp;
+	bool[] valuesToApply = { false, false, false, false };
 	int table;
 	int seat;
 	#endregion
@@ -71,68 +72,94 @@ public class UIManager : MonoBehaviour {
 
 	public void ApplyRegularThreshold(Text threshold) {
 		if (threshold.text.Equals("")) {
-			//Use placeholder value
-			Text placeholder = GameObject.Find("PlaceholderRest").GetComponent<Text>();
+			//APPLY NOTHING
+			valuesToApply[0] = false;
+			/*Text placeholder = GameObject.Find("PlaceholderRest").GetComponent<Text>();
 			if(!float.TryParse(placeholder.text, out regThresholdTemp)) {
 				//Failed parsing.  Inform console
 				Debug.LogError("Regular Threshold failed to parse.");
-			}
+			}*/
 		}
 		else if(!float.TryParse(threshold.text, out regThresholdTemp)) {
 			//Failed parsing.  Inform console
 			Debug.LogError("Regular Threshold failed to parse.");
 		}
+		else {
+			//Successful parsing
+			valuesToApply[0] = true;
+		}
 	}
 
 	public void ApplyHighThreshold(Text threshold) {
 		if (threshold.text.Equals("")) {
-			//Use placeholder value
-			Text placeholder = GameObject.Find("PlaceholderRecovery").GetComponent<Text>();
+			//APPLY NOTHING
+			valuesToApply[1] = false;
+			/*Text placeholder = GameObject.Find("PlaceholderRecovery").GetComponent<Text>();
 			if (!float.TryParse(placeholder.text, out highThresholdTemp)) {
 				//Failed parsing.  Inform console
 				Debug.LogError("High Threshold failed to parse.");
-			}
+			}*/
 		}
 		else if (!float.TryParse(threshold.text, out highThresholdTemp)) {
 			//Failed parsing.  Inform console
 			Debug.LogError("High Threshold failed to parse.");
 		}
+		else {
+			//Successful parsing
+			valuesToApply[1] = true;
+		}
 	}
 
 	public void ApplyAbsoluteRefractoryPeriod(Text refPd) {
 		if (refPd.text.Equals("")) {
-			//Use placeholder value
-			Text placeholder = GameObject.Find("PlaceholderAbsolute").GetComponent<Text>();
+			//APPLY NOTHING
+			valuesToApply[2] = false;
+			/*Text placeholder = GameObject.Find("PlaceholderAbsolute").GetComponent<Text>();
 			if (!float.TryParse(placeholder.text, out absRefPdTemp)) {
 				//Failed parsing.  Inform console
 				Debug.LogError("Absolute Refractory Period failed to parse.");
-			}
+			}*/
 		}
 		else if (!float.TryParse(refPd.text, out absRefPdTemp)) {
 			//Failed parsing.  Inform console
 			Debug.LogError("Absolute Refractory Period failed to parse.");
 		}
+		else {
+			//Successful parsing
+			valuesToApply[2] = true;
+		}
 	}
 
 	public void ApplyRelativeRefractoryPeriod(Text refPd) {
 		if (refPd.text.Equals("")) {
-			//Use placeholder value
-			Text placeholder = GameObject.Find("PlaceholderRelative").GetComponent<Text>();
+			//APPLY NOTHING
+			valuesToApply[3] = false;
+			/*Text placeholder = GameObject.Find("PlaceholderRelative").GetComponent<Text>();
 			if (!float.TryParse(placeholder.text, out relRefPdTemp)) {
 				//Failed parsing.  Inform console
 				Debug.LogError("Relative Refractory Period failed to parse.");
-			}
+			}*/
 		}
 		else if (!float.TryParse(refPd.text, out relRefPdTemp)) {
 			//Failed parsing.  Inform console
 			Debug.LogError("Relative Refractory Period failed to parse.");
 		}
+		else {
+			//Successful parsing
+			valuesToApply[3] = true;
+		}
 	}
 
+	//Only applies changed neuron parameters
 	public void ApplyNeuronParameters() {
 		GameObject player = NetworkManager.singleton.client.connection.playerControllers[0].gameObject;
-		player.GetComponent<Controller>().SetNeuronParameters(neuronToSetRef, regThresholdTemp, highThresholdTemp, absRefPdTemp, relRefPdTemp, true);
+		player.GetComponent<Controller>().SetNeuronParameters(neuronToSetRef, regThresholdTemp, highThresholdTemp, absRefPdTemp, relRefPdTemp, true, valuesToApply);
 	}
+
+	/*public void ApplyNeuronParameters() {
+		GameObject player = NetworkManager.singleton.client.connection.playerControllers[0].gameObject;
+		player.GetComponent<Controller>().SetNeuronParameters(neuronToSetRef, regThresholdTemp, highThresholdTemp, absRefPdTemp, relRefPdTemp, true);
+	}*/
 
 	public void SetTableNum(int tableNum) {
 		table = tableNum;

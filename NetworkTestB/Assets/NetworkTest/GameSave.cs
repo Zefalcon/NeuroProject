@@ -703,7 +703,8 @@ public static class GameSave {
 				//Neuron found!  Set parameters
 				//Debug.Log("Found " + table + "," + seat);
 				//Debug.Log("Variables:" + file.GetRestingThreshold());
-				obj.GetComponent<Controller>().SetNeuronParameters(obj, file.GetRestingThreshold(), file.GetRecoveryThreshold(), file.GetAbsoluteRefractoryPeriod(), file.GetRelativeRefractoryPeriod(), false);
+				bool[] applyAll = { true, true, true, true };
+				obj.GetComponent<Controller>().SetNeuronParameters(obj, file.GetRestingThreshold(), file.GetRecoveryThreshold(), file.GetAbsoluteRefractoryPeriod(), file.GetRelativeRefractoryPeriod(), false, applyAll);
 				remove = file;
 			}
 		}
@@ -713,7 +714,8 @@ public static class GameSave {
 				if (created.GetTableNum().Equals(table) && created.GetSeatNum().Equals(seat)) {
 					//Debug.Log("Found " + table + "," + seat);
 					//Debug.Log("Variables:" + created.GetRestingThreshold());
-					obj.GetComponent<Controller>().SetNeuronParameters(obj, created.GetRestingThreshold(), created.GetRecoveryThreshold(), created.GetAbsoluteRefractoryPeriod(), created.GetRelativeRefractoryPeriod(), false);
+					bool[] applyAll = { true, true, true, true };
+					obj.GetComponent<Controller>().SetNeuronParameters(obj, created.GetRestingThreshold(), created.GetRecoveryThreshold(), created.GetAbsoluteRefractoryPeriod(), created.GetRelativeRefractoryPeriod(), false, applyAll);
 					remove = created;
 				}
 			}

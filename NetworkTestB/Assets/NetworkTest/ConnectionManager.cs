@@ -65,10 +65,14 @@ public class ConnectionManager : NetworkBehaviour {
 					//Check if neuron
 					if (canConnect && hit.transform.gameObject.GetComponent<Controller>() != null) {
 						if (hit.transform.gameObject.Equals(cubeInstance.transform.gameObject)) {
-							//Same object; don't form connection
-							return;
+							//Same object; bring up own parameter dialogue
+							GetComponent<Controller>().CmdOpenSetNeuronParameters(gameObject, gameObject);
+							//return;
 						}
-						CmdAskSpawnConnection(cubeInstance.transform.gameObject, hit.transform.gameObject);
+						else {
+							//Different object; try to connect
+							CmdAskSpawnConnection(cubeInstance.transform.gameObject, hit.transform.gameObject);
+						}
 					}
 
 					//Check if connection
@@ -270,6 +274,7 @@ public class ConnectionManager : NetworkBehaviour {
 		//Receiver accepts connection
 		//Bring up interface for user to decide whether to connect
 		if (start.GetComponent<Controller>().IsInstructor()) {
+			Debug.Log("Not showing because instructor");
 			//Do nothing
 			return;
 		}

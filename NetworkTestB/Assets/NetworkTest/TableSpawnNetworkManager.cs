@@ -6,8 +6,35 @@ using UnityEngine.UI;
 
 public class TableSpawnNetworkManager : NetworkManager {
 
+	public struct Seating {
+		int table;
+		int seat;
+
+		public Seating(int table, int seat) {
+			this.table = table;
+			this.seat = seat;
+		}
+		public int GetTable() {
+			return table;
+		}
+		public int GetSeat() {
+			return seat;
+		}
+		public bool SameSpot(Seating other) {
+			if(other.GetTable().Equals(table) && other.GetSeat().Equals(seat)) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+	}
+
+	public List<Seating> loggedIn = new List<Seating>();
+
 	public GameObject TableSelector;
 	public GameObject InstructorLogin; //Instructor login should have a textbox for password input and a button to input said password.
+	public GameObject LoginError; //If seat chosen occupied, must show user error.
 
 	int tableSelected = 0;
 	int seatSelected = 0;
@@ -69,6 +96,8 @@ public class TableSpawnNetworkManager : NetworkManager {
 
 	public override void OnServerAddPlayer(NetworkConnection conn, short playerControllerId, NetworkReader extraMessageReader) {
 		Vector3 location = tableLocations[tableSelected] + seatOffsets[seatSelected];
+		Seating spot = new Seating(tableSelected, seatSelected);
+		loggedIn.Add(spot);
 
 		GameObject player = GameObject.Instantiate(playerPrefab, location, Quaternion.identity);
 		player.GetComponent<Controller>().SetSeatNum(seatSelected);
@@ -107,6 +136,22 @@ public class TableSpawnNetworkManager : NetworkManager {
 			ui.CloseSetNeuronParametersBox();
 		}
 		base.OnClientDisconnect(conn);
+	}
+
+	public bool SeatIsOccupied() {
+		Seating attempt = new Seating(tableSelected, seatSelected);
+		foreach(Seating taken in loggedIn) {
+			if (attempt.SameSpot(taken)) {
+				//Seat taken
+				return true;
+			}
+		}
+		//Otherwise, seat is available
+		return false;
+	}
+
+	public void ShowLoginError() {
+		LoginError.SetActive(true);
 	}
 
 	public void SetTableNum(int table) {

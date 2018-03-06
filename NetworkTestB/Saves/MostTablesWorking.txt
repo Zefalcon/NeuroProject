@@ -1,0 +1,44 @@
+Start(Tbl1 Seat5) End(Tbl1 Seat6) Str-10
+Start(Tbl1 Seat6) End(Tbl1 Seat5) Str-10
+Start(Tbl2 Seat3) End(Tbl2 Seat2) Str-10
+Start(Tbl2 Seat2) End(Tbl2 Seat3) Str-10
+Start(Tbl2 Seat2) End(Tbl1 Seat6) Str-10
+Start(Tbl1 Seat6) End(Tbl2 Seat2) Str-10
+Start(Tbl3 Seat6) End(Tbl3 Seat5) Str-10
+Start(Tbl3 Seat5) End(Tbl3 Seat6) Str-10
+Start(Tbl1 Seat6) End(Tbl3 Seat6) Str-10
+Start(Tbl3 Seat6) End(Tbl1 Seat6) Str-10
+Start(Tbl4 Seat3) End(Tbl4 Seat2) Str-10
+Start(Tbl4 Seat2) End(Tbl4 Seat3) Str-10
+Start(Tbl4 Seat2) End(Tbl2 Seat2) Str-10
+Start(Tbl2 Seat2) End(Tbl4 Seat2) Str-10
+Start(Tbl3 Seat6) End(Tbl4 Seat2) Str-10
+Start(Tbl4 Seat2) End(Tbl3 Seat6) Str-10
+Sensor(Tbl1 Location A) End(Tbl1 Seat5)
+Sensor(Tbl1 Location P) End(Tbl1 Seat6)
+Sensor(Tbl2 Location P) End(Tbl2 Seat2)
+Sensor(Tbl2 Location A) End(Tbl2 Seat3)
+Sensor(Tbl3 Location A) End(Tbl3 Seat5)
+Sensor(Tbl3 Location P) End(Tbl3 Seat6)
+Sensor(Tbl4 Location A) End(Tbl4 Seat3)
+Sensor(Tbl4 Location P) End(Tbl4 Seat2)
+Muscle(Tbl1 Type B) Start(Tbl1 Seat5)
+Muscle(Tbl1 Type D) Start(Tbl1 Seat5)
+Muscle(Tbl1 Type F) Start(Tbl1 Seat6)
+Muscle(Tbl2 Type F) Start(Tbl2 Seat2)
+Muscle(Tbl2 Type D) Start(Tbl2 Seat3)
+Muscle(Tbl2 Type B) Start(Tbl2 Seat3)
+Muscle(Tbl3 Type B) Start(Tbl3 Seat5)
+Muscle(Tbl3 Type D) Start(Tbl3 Seat5)
+Muscle(Tbl3 Type F) Start(Tbl3 Seat6)
+Muscle(Tbl4 Type B) Start(Tbl4 Seat3)
+Muscle(Tbl4 Type D) Start(Tbl4 Seat3)
+Muscle(Tbl4 Type F) Start(Tbl4 Seat2)
+Neuron(Tbl1 Seat5) Rest0 Rec0 Abs0.2 Rel0
+Neuron(Tbl1 Seat6) Rest0 Rec0 Abs0.2 Rel0
+Neuron(Tbl2 Seat2) Rest0 Rec0 Abs0.2 Rel0
+Neuron(Tbl2 Seat3) Rest0 Rec0 Abs0.2 Rel0
+Neuron(Tbl3 Seat5) Rest0 Rec0 Abs0.2 Rel0
+Neuron(Tbl3 Seat6) Rest0 Rec0 Abs0.2 Rel0
+Neuron(Tbl4 Seat2) Rest0 Rec0 Abs0.2 Rel0
+Neuron(Tbl4 Seat3) Rest0 Rec0 Abs0.2 Rel0

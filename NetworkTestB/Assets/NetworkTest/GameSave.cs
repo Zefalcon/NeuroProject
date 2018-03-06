@@ -6,10 +6,6 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.Text.RegularExpressions;
 
-/// <summary>
-/// Only connections need to be saved to a file.
-/// Connections saved as strings in the form: Start(Tbl# Seat#) End(Tbl# Seat#) Str#
-/// </summary>
 public static class GameSave {
 
 	enum MuscleType {
@@ -696,13 +692,10 @@ public static class GameSave {
 
 		//Set parameters
 		NeuronFile remove = null;
-		//Debug.Log("Checking for " + table + "," + seat);
 		foreach (NeuronFile file in neuronSettingsToLoad) {
 			//Check table and seat
 			if (file.GetTableNum().Equals(table) && file.GetSeatNum().Equals(seat)) {
 				//Neuron found!  Set parameters
-				//Debug.Log("Found " + table + "," + seat);
-				//Debug.Log("Variables:" + file.GetRestingThreshold());
 				bool[] applyAll = { true, true, true, true };
 				obj.GetComponent<Controller>().SetNeuronParameters(obj, file.GetRestingThreshold(), file.GetRecoveryThreshold(), file.GetAbsoluteRefractoryPeriod(), file.GetRelativeRefractoryPeriod(), false, applyAll);
 				remove = file;
@@ -712,8 +705,6 @@ public static class GameSave {
 		if (remove == null) {
 			foreach (NeuronFile created in adjustedNeuronSettings) {
 				if (created.GetTableNum().Equals(table) && created.GetSeatNum().Equals(seat)) {
-					//Debug.Log("Found " + table + "," + seat);
-					//Debug.Log("Variables:" + created.GetRestingThreshold());
 					bool[] applyAll = { true, true, true, true };
 					obj.GetComponent<Controller>().SetNeuronParameters(obj, created.GetRestingThreshold(), created.GetRecoveryThreshold(), created.GetAbsoluteRefractoryPeriod(), created.GetRelativeRefractoryPeriod(), false, applyAll);
 					remove = created;
@@ -793,6 +784,10 @@ public static class GameSave {
 		foreach (MuscleConnectionFile file in musclesToRemove) {
 			muscleConnectionsToLoad.Remove(file);
 		}
+	}
+
+	public static void PlayerLeft(GameObject obj, int table, int seat) {
+
 	}
 
 	public static void ConnectionMade(Connection con) {
@@ -1005,9 +1000,31 @@ public static class GameSave {
 	}
 
 	//Updates file for given neuron
+	public static void NeuronParametersChanged(Controller neuron, float thresh, float recovery, float absolute, float relative) {
+		NeuronFile toReplace = null;
+		NeuronFile newFile = new NeuronFile(neuron.GetTableNum(), neuron.GetSeatNum(), thresh, recovery, absolute, relative);
+		foreach (NeuronFile file in adjustedNeuronSettings) {
+			if (file.GetTableNum().Equals(neuron.GetTableNum()) && file.GetSeatNum().Equals(neuron.GetSeatNum())) {
+				//Neuron found!  Update file
+				toReplace = file;
+			}
+		}
+		if (toReplace != null) {
+			//File removed.
+			adjustedNeuronSettings.Remove(toReplace);
+		}
+
+		//Then add new file
+		adjustedNeuronSettings.Add(newFile);
+	}
+
+	//Updates file for given neuron
 	public static void NeuronParametersChanged(Controller neuron) {
 		NeuronFile toReplace = null;
-		NeuronFile newFile = new NeuronFile(neuron.GetTableNum(), neuron.GetSeatNum(), neuron.GetThreshold(), neuron.GetHighThreshold(), neuron.GetAbsRefractoryPd(), neuron.GetRelRefractoryPd());
+		//neuron.PrepareRefractoryVariables();
+		float[] refractoryVars = neuron.GetRefractoryVariables();
+		//NeuronFile newFile = new NeuronFile(neuron.GetTableNum(), neuron.GetSeatNum(), neuron.GetThreshold(), neuron.GetHighThreshold(), neuron.GetAbsRefractoryPd(), neuron.GetRelRefractoryPd());
+		NeuronFile newFile = new NeuronFile(neuron.GetTableNum(), neuron.GetSeatNum(), refractoryVars[0], refractoryVars[1], refractoryVars[2], refractoryVars[3]);
 		foreach (NeuronFile file in adjustedNeuronSettings) {
 			if(file.GetTableNum().Equals(neuron.GetTableNum()) && file.GetSeatNum().Equals(neuron.GetSeatNum())){
 				//Neuron found!  Update file

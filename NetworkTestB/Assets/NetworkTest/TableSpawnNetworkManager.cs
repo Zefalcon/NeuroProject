@@ -30,7 +30,7 @@ public class TableSpawnNetworkManager : NetworkManager {
 		}
 	}
 
-	public List<Seating> loggedIn = new List<Seating>();
+	public static List<Seating> loggedIn = new List<Seating>();
 
 	public GameObject TableSelector;
 	public GameObject InstructorLogin; //Instructor login should have a textbox for password input and a button to input said password.

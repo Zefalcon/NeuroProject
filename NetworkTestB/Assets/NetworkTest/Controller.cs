@@ -9,14 +9,14 @@ public class Controller : NetworkBehaviour {
 	private Color defaultColor;
 	private GameObject tableSelector;
 	public List<NeuralInput> currentInputs;
-	[SyncVar]
+	//[SyncVar]
 	private float neuralInputThreshold = 10f;
-	[SyncVar]
+	//[SyncVar]
 	private float neuralInputThresholdHigh = 20f;
 	private float last_firing = -100f;
-	[SyncVar]
+	//[SyncVar]
 	private float hardNeuralCooldown = 1f;
-	[SyncVar]
+	//[SyncVar]
 	private float softNeuralCooldown = 3f;
 
 	public List<Connection> connectionsToOthers;
@@ -32,6 +32,8 @@ public class Controller : NetworkBehaviour {
 	private bool isInstructorControlled = false; //For Instructor-controlled neurons
 
 	private NetworkConnection actualNetworkConnection; //For use in instructor-spawned neurons.
+
+	private float[] refractoryVariableHolder; //Temporary storage for refractory variables asked for from another Controller.
 
 	[SyncVar]
 	private int tableNum;
@@ -62,6 +64,10 @@ public class Controller : NetworkBehaviour {
 
 	public bool IsInstructor() {
 		return isInstructor;
+	}
+
+	public bool IsInstructorControlled() {
+		return isInstructorControlled;
 	}
 
 	public void SetClient() {
@@ -98,6 +104,61 @@ public class Controller : NetworkBehaviour {
 
 	public float GetRelRefractoryPd() {
 		return softNeuralCooldown;
+	}
+
+	public void PrepareRefractoryVariables(GameObject neuron, GameObject asker) {
+		//Sets up refractory variables.
+		refractoryVariableHolder = new float[5];
+		CmdGetRefractoryVariables(neuron, asker);
+		//TargetGetRefractoryVariables(this.connectionToClient);
+		//StartCoroutine("AwaitRefractoryVariables");
+	}
+
+	public float[] GetRefractoryVariables() {
+		//Debug.Log("Get: " + refractoryVariableHolder[0]);
+		return refractoryVariableHolder;
+	}
+
+	[Command]
+	void CmdGetRefractoryVariables(GameObject neuron, GameObject asker) {
+		if (neuron.GetComponent<Controller>().connectionToClient == null) {
+			TargetGetRefractoryVariables(neuron.GetComponent<Controller>().GetNetworkConnection(), neuron, asker);
+		}
+		else {
+			TargetGetRefractoryVariables(neuron.GetComponent<Controller>().connectionToClient, neuron, asker);
+		}
+	}
+
+	[TargetRpc]
+	void TargetGetRefractoryVariables(NetworkConnection connection, GameObject neuron, GameObject asker) {
+		//Returns specific refractory variables from the source
+		float[] vars = new float[5];
+		vars[0] = neuron.GetComponent<Controller>().GetThreshold();
+		vars[1] = neuron.GetComponent<Controller>().GetHighThreshold();
+		vars[2] = neuron.GetComponent<Controller>().GetAbsRefractoryPd();
+		vars[3] = neuron.GetComponent<Controller>().GetRelRefractoryPd();
+		neuron.GetComponent<Controller>().ReturnRefractoryVariables(vars, neuron, asker);
+	}
+
+	public void ReturnRefractoryVariables(float[] vars, GameObject neuron, GameObject asker) {
+		CmdReturnRefractoryVariables(vars[0], vars[1], vars[2], vars[3], neuron, asker);
+	}
+
+	[Command]
+	void CmdReturnRefractoryVariables(float thresh, float recovery, float absolute, float relative, GameObject neuron, GameObject asker) {
+		//GameSave.NeuronParametersChanged(neuron.GetComponent<Controller>(), thresh, recovery, absolute, relative); //Should in theory work.
+		if (asker.GetComponent<Controller>().connectionToClient == null) {
+			TargetReturnRefractoryVariables(asker.GetComponent<Controller>().GetNetworkConnection(), thresh, recovery, absolute, relative);
+		}
+		else {
+			TargetReturnRefractoryVariables(asker.GetComponent<Controller>().connectionToClient, thresh, recovery, absolute, relative);
+		}
+	}
+
+	[TargetRpc]
+	void TargetReturnRefractoryVariables(NetworkConnection connection, float thresh, float recovery, float absolute, float relative) {
+		float[] refractoryVariables = new float[] { thresh, recovery, absolute, relative};
+		GameObject.Find("UIManager").GetComponent<UIManager>().SetNeuronParameterText(refractoryVariables);
 	}
 
 	public void SetInstructorCanClick(bool canClick) {
@@ -174,10 +235,28 @@ public class Controller : NetworkBehaviour {
 			int[] pos = manager.GetPositionIdentities();
 			tableNum = pos[0];
 			seatNum = pos[1];
+
+			//Check if seat occupied (as long as not 0,0)
+			if(tableNum != 0 || seatNum != 0) {
+				GameObject taken = GameObject.Find(tableNum + "," + seatNum);
+				if (taken) {
+					Debug.Log("Seat taken!");
+					//Check if ISN
+					Controller neuron = taken.GetComponent<Controller>();
+					//if (neuron.IsInstructorControlled()) {
+						//Tell instructor to delete
+						RemoveInstructorSpawnedNeuron(neuron.gameObject);
+					//}
+					//else {
+						//TODO: Disconnect current user with message that seat is occupied.
+					//}
+				}
+			}
+
 			isInstructor = manager.GetInstructorStatus();
 			isBeingControlled = true;
 			CmdApplyPositionNumbers(gameObject, tableNum, seatNum);
-			CmdPlayerEntered(gameObject, tableNum, seatNum);  //TODO: Check spawn location before this and kick out if occupied?
+			CmdPlayerEntered(gameObject, tableNum, seatNum);
 			if (isInstructor) {
 				//Engage Instructor Mode
 				GetComponent<SphereSwapper>().enabled = true; //Enable SphereSwapper so instructor can create and swap between spheres.
@@ -189,6 +268,24 @@ public class Controller : NetworkBehaviour {
 				//Disengage Instructor Mode
 				CmdDisengageInstructorMode(gameObject);
 			}
+		}
+	}
+
+	public void RemoveInstructorSpawnedNeuron(GameObject neuron) {
+		CmdRemoveInstructorSpawnedNeuron(neuron);
+	}
+
+	[Command]
+	void CmdRemoveInstructorSpawnedNeuron(GameObject neuron) {
+		RpcRemoveInstructorSpawnedNeuron(neuron);
+	}
+
+	[ClientRpc]
+	void RpcRemoveInstructorSpawnedNeuron(GameObject neuron) {
+		SphereSwapper[] instructors =  GameObject.FindObjectsOfType<SphereSwapper>();
+		foreach (SphereSwapper swap in instructors) {
+			Debug.Log("Removing");
+			swap.DeleteSphere(neuron);
 		}
 	}
 
@@ -235,7 +332,7 @@ public class Controller : NetworkBehaviour {
 	}
 
 	public void DisengageInstructorMode(GameObject obj) {
-		CmdDisengageInstructorMode(obj);
+		CmdDisengageInstructorMode(obj);	//TODO: Causing issues for loading (From SphereSwapper)
 	}
 
 	[Command]
@@ -364,6 +461,11 @@ public class Controller : NetworkBehaviour {
 		Camera.main.transform.Translate(x, 0, 0);
 		Camera.main.transform.Translate(0, y, 0);
 
+		//Instructions screen
+		if (Input.GetKeyDown(KeyCode.Slash) || Input.GetKeyDown(KeyCode.Question)) {
+			GameObject.Find("UIManager").GetComponent<UIManager>().ToggleInstructions();
+		}
+
 		//Switch between main views and basic view
 		if (!UIManager.inDialogue) {
 			if (Input.GetKeyDown(KeyCode.Keypad1) || Input.GetKeyDown(KeyCode.Alpha1)) {
@@ -474,19 +576,21 @@ public class Controller : NetworkBehaviour {
 	public void CmdOpenSetNeuronParameters(GameObject instructor, GameObject neuron) {
 		if (instructor.GetComponent<Controller>().connectionToClient == null) {
 			//Instructor-spawned neuron.  Use actual instructor.
-			TargetOpenSetNeuronParameters(instructor.GetComponent<Controller>().GetNetworkConnection(), neuron);
+			TargetOpenSetNeuronParameters(instructor.GetComponent<Controller>().GetNetworkConnection(), neuron, instructor);
 		}
 		else {
-			TargetOpenSetNeuronParameters(instructor.GetComponent<Controller>().connectionToClient, neuron);
+			TargetOpenSetNeuronParameters(instructor.GetComponent<Controller>().connectionToClient, neuron, instructor);
 		}
 	}
 
 	[TargetRpc]
-	public void TargetOpenSetNeuronParameters(NetworkConnection network, GameObject neuron) {
-		GameObject.Find("UIManager").GetComponent<UIManager>().OpenSetNeuronParametersBox(neuron);
+	public void TargetOpenSetNeuronParameters(NetworkConnection network, GameObject neuron, GameObject asker) {
+		GameObject.Find("UIManager").GetComponent<UIManager>().OpenSetNeuronParametersBox(neuron, asker);
 	}
 
 	public void SetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod, bool alertSave, bool[] valuesToApply) {
+		Debug.Log("Applying settings for " + neuron.GetComponent<Controller>().GetTableNum() + "," + neuron.GetComponent<Controller>().GetSeatNum());
+		Debug.Log("Settings: " + regularThreshold + "," + highThreshold + "," + absoluteRefractoryPeriod + "," + relativeRefractoryPeriod);
 		CmdSetNeuronParameters(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod, alertSave, valuesToApply);
 	}
 
@@ -494,7 +598,6 @@ public class Controller : NetworkBehaviour {
 	public void CmdSetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod, bool alertSave, bool[] valuesToApply) {
 		Controller c = neuron.GetComponent<Controller>();
 
-		//RpcSetNeuronParameters(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod);
 		if (c.connectionToClient == null) {
 			//Instructor-spawned neuron.  Use actual connection
 			TargetSetNeuronParameters(c.GetNetworkConnection(), neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod, alertSave, valuesToApply);
@@ -523,25 +626,18 @@ public class Controller : NetworkBehaviour {
 
 		if (alertSave) {
 			//Is this a change from an instructor, or from a loaded save file?
-			//GameSave.NeuronParametersChanged(neuron.GetComponent<Controller>());
-			CmdAdjustGameSave(neuron);
+			AdjustGameSave(neuron, regularThreshold, highThreshold, absoluteRefractoryPeriod, relativeRefractoryPeriod);
 		}
 	}
 
-	[Command]
-	public void CmdAdjustGameSave(GameObject con) {
-		GameSave.NeuronParametersChanged(con.GetComponent<Controller>());
+	public void AdjustGameSave(GameObject neuron, float thresh, float recovery, float absolute, float relative) {
+		neuron.GetComponent<Controller>().CmdAdjustGameSave(neuron, thresh, recovery, absolute, relative);
 	}
 
-	/*[ClientRpc]
-	public void RpcSetNeuronParameters(GameObject neuron, float regularThreshold, float highThreshold, float absoluteRefractoryPeriod, float relativeRefractoryPeriod) {
-		//Debug.Log("Client: " + regularThreshold);
-		Controller c = neuron.GetComponent<Controller>();
-		c.SetThreshold(regularThreshold);
-		c.SetHighThreshold(highThreshold);
-		c.SetAbsRefractoryPd(absoluteRefractoryPeriod);
-		c.SetRelRefractoryPd(relativeRefractoryPeriod);
-	}*/
+	[Command]
+	public void CmdAdjustGameSave(GameObject con, float thresh, float recovery, float absolute, float relative) {
+		GameSave.NeuronParametersChanged(con.GetComponent<Controller>(), thresh, recovery, absolute, relative);
+	}
 
 	public void ColorChangeParser(ColorChanger toChange, bool delayed) {
 		if (delayed) {
@@ -639,7 +735,9 @@ public class Controller : NetworkBehaviour {
 
 	[Command]
 	void CmdRemoveConnection(GameObject obj, GameObject toRemove) {
-		obj.GetComponent<Controller>().connectionsToOthers.Remove(toRemove.GetComponent<Connection>());
+		if (obj.GetComponent<Controller>() != null) {
+			obj.GetComponent<Controller>().connectionsToOthers.Remove(toRemove.GetComponent<Connection>());
+		}
 		RpcRemoveConnection(obj, toRemove);
 	}
 
@@ -673,5 +771,21 @@ public class Controller : NetworkBehaviour {
 			}
 		}
 		NetworkServer.Destroy(toRemove);
+	}
+
+	private void OnDestroy() {
+		//CmdOnDelete(tableNum, seatNum);
+	}
+
+	[Command]
+	void CmdOnDelete(int table, int seat) {
+		TableSpawnNetworkManager.Seating seating = new TableSpawnNetworkManager.Seating(table, seat);
+		TableSpawnNetworkManager.loggedIn.Remove(seating);
+
+	}
+
+	[ClientRpc]
+	void RpcOnDelete(TableSpawnNetworkManager.Seating seating) {
+		TableSpawnNetworkManager.loggedIn.Remove(seating);
 	}
 }

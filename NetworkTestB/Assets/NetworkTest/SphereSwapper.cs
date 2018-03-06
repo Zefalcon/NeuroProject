@@ -5,8 +5,8 @@ using UnityEngine.Networking;
 
 public class SphereSwapper : NetworkBehaviour {
 
-	List<GameObject> spheres = new List<GameObject>();
-	int instructorIndex;
+	public List<GameObject> spheres = new List<GameObject>();
+	int instructorIndex = 0; //Is always 0, should not need to exist, but serves as a simple ref
 	int currentIndex = 0;
 
 	public GameObject spherePrefab;
@@ -27,6 +27,10 @@ public class SphereSwapper : NetworkBehaviour {
 			if (Input.GetKeyDown(KeyCode.Tab)) {
 				//Swap spheres
 				SwapToNextSphere();
+			}
+			//Testing - finalized for brevity
+			if (Input.GetKeyDown(KeyCode.T)) {
+				DeleteCurrentSphere();
 			}
 		}
 	}
@@ -70,7 +74,7 @@ public class SphereSwapper : NetworkBehaviour {
 		sphere.GetComponent<Controller>().DisengageInstructorMode(sphere);
 		sphere.GetComponent<Controller>().SetNetworkConnection(instructor.GetComponent<Controller>().connectionToClient);
 		AddNewSphere(false, sphere);
-		GameSave.PlayerEntered(sphere, table, seat, false);
+		//GameSave.PlayerEntered(sphere, table, seat, false);
 		RpcSpawnSphere(table, seat, sphere, instructor);
 		TargetSpawnSphere(instructor.GetComponent<Controller>().connectionToClient, table, seat, sphere, instructor);
 	}
@@ -91,13 +95,17 @@ public class SphereSwapper : NetworkBehaviour {
 		sphere.GetComponent<Controller>().ApplyPositionNumbers(sphere, table, seat);
 		sphere.GetComponent<Controller>().SetNetworkConnection(network);
 		instructor.GetComponent<SphereSwapper>().SwapToSphere(instructor.GetComponent<SphereSwapper>().GetNumSpheres() - 1);
+		InformOfEntrance(gameObject, sphere, table, seat); //Try here?
 	}
 
-	//[ClientRpc]
-	//void RpcSpawnSphere(int table, int seat, GameObject sphere, GameObject instructor) {
-		//TODO: Try here?
-	//	GameSave.PlayerEntered(sphere, table, seat, false);
-	//}
+	public void InformOfEntrance(GameObject swapper, GameObject neuron, int table, int seat) {
+		swapper.GetComponent<SphereSwapper>().CmdInformOfEntrance(neuron, table, seat);
+	}
+
+	[Command]
+	public void CmdInformOfEntrance(GameObject neuron, int table, int seat) {
+		GameSave.PlayerEntered(neuron, table, seat, false);
+	}
 
 	public void AddNewSphere(bool isInstructor, GameObject newSphere) {
 		//Adds new sphere to the list of spheres
@@ -109,8 +117,67 @@ public class SphereSwapper : NetworkBehaviour {
 		newSphere.GetComponent<Controller>().SetIsInstructorControlled();
 	}
 
+	public void DeleteCurrentSphere() {
+		DeleteSphere(currentIndex);
+	}
+
+	public void DeleteSphere(int sphereIndex) {
+		if (sphereIndex <= currentIndex) {
+			//currentIndex must be decremented
+			currentIndex--;
+		}
+		else {
+			//currentIndex is fine where it is
+		}
+		if (sphereIndex == instructorIndex) {
+			//DO NOT DELETE
+			return;
+		}
+
+		GameObject sphere = spheres[sphereIndex];
+		spheres.Remove(sphere);
+		//NetworkServer.Destroy(sphere);
+		CmdDeleteSphere(sphere);
+	}
+
+	public void DeleteSphere(GameObject sphere) {
+		//Deletes sphere from existance
+		//Figure out what index sphere is at
+		int sphereIndex = 0;
+
+		for(int i=0; i<spheres.Count; i++) {
+			Debug.Log(spheres[i] + " vs " + sphere);
+			if (spheres[i].Equals(sphere)) {
+				//TODO: probably fails
+				sphereIndex = i;
+			}
+		}
+		if (sphereIndex <= currentIndex) {
+			//currentIndex must be decremented
+			currentIndex--;		
+		}
+		else {
+			//currentIndex is fine where it is
+		}
+		if(sphereIndex == instructorIndex) {
+			//DO NOT DELETE
+			return;
+		}
+		spheres.Remove(sphere);
+		//NetworkServer.Destroy(sphere);
+		CmdDeleteSphere(sphere);
+	}
+
+	[Command]
+	void CmdDeleteSphere(GameObject sphere) {
+		NetworkServer.Destroy(sphere);
+	}
+
 	public void SwapToSphere(int index) {
 		//Turn off previous sphere's controls.
+		/*for(int i=0; i<spheres.Count; i++) {
+			spheres[i].GetComponent<ConnectionManager>().TransferControlAway();
+		}*/
 		spheres[currentIndex].GetComponent<ConnectionManager>().TransferControlAway();
 
 		//Turn on next sphere's controls

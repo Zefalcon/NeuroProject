@@ -22,6 +22,7 @@ public class UIManager : MonoBehaviour {
 	public GameObject setNeuronParameters;
 	GameObject neuronToSetRef;
 	public GameObject createSphere;
+	public GameObject instructions;
 	#endregion
 
 	#region Temp Button Variables
@@ -223,7 +224,7 @@ public class UIManager : MonoBehaviour {
 		inDialogue = false;
 	}
 
-	public void OpenSetNeuronParametersBox(GameObject neuron) {
+	public void OpenSetNeuronParametersBox(GameObject neuron, GameObject asker) {
 		setNeuronParameters.SetActive(true);
 		inDialogue = true;
 		neuronToSetRef = neuron;
@@ -231,24 +232,9 @@ public class UIManager : MonoBehaviour {
 		message.text = "Currently editing " + neuron.name;
 
 		//Set placeholders to correct values
-		Text restThresh = GameObject.Find("PlaceholderRest").GetComponent<Text>();
-		restThresh.text = neuron.GetComponent<Controller>().GetThreshold().ToString();
-		Text recoveryThresh = GameObject.Find("PlaceholderRecovery").GetComponent<Text>();
-		recoveryThresh.text = neuron.GetComponent<Controller>().GetHighThreshold().ToString();
-		Text absPd = GameObject.Find("PlaceholderAbsolute").GetComponent<Text>();
-		absPd.text = neuron.GetComponent<Controller>().GetAbsRefractoryPd().ToString();
-		Text relPd = GameObject.Find("PlaceholderRelative").GetComponent<Text>();
-		relPd.text = neuron.GetComponent<Controller>().GetRelRefractoryPd().ToString();
-
-		//Reset text
-		GameObject.Find("TextRest").GetComponent<Text>().text = string.Empty;
-		GameObject.Find("TextRecovery").GetComponent<Text>().text = string.Empty;
-		GameObject.Find("TextAbsolute").GetComponent<Text>().text = string.Empty;
-		GameObject.Find("TextRelative").GetComponent<Text>().text = string.Empty;
-		GameObject.Find("RestingThresholdInput").GetComponent<InputField>().text = string.Empty;
-		GameObject.Find("RecoveryThresholdInput").GetComponent<InputField>().text = string.Empty;
-		GameObject.Find("AbsoluteRefractoryPeriodInput").GetComponent<InputField>().text = string.Empty;
-		GameObject.Find("RelativeRefractoryPeriodInput").GetComponent<InputField>().text = string.Empty;
+		asker.GetComponent<Controller>().PrepareRefractoryVariables(neuron, asker);
+		//StartCoroutine("AwaitRefractoryVariables", neuron);
+		//float[] refractoryVars = neuron.GetComponent<Controller>().GetRefractoryVariables();
 	}
 
 	public void CloseSetNeuronParametersBox() {
@@ -265,5 +251,46 @@ public class UIManager : MonoBehaviour {
 		createSphere.SetActive(false);
 		inDialogue = false;
 	}
+
+	public void ToggleInstructions() {
+		bool isActive = instructions.activeInHierarchy;
+		instructions.SetActive(!isActive);
+		inDialogue = !isActive; //isActive isn't negated before this, so we must do it ourselves
+	}
 	#endregion
+
+	public IEnumerator AwaitRefractoryVariables(GameObject neuron) {
+		//Wait for refractoryVariableHolder to be edited.
+		float[] refractoryVars = neuron.GetComponent<Controller>().GetRefractoryVariables();
+
+		while (refractoryVars[4] == 0) {
+			yield return null;
+			refractoryVars = neuron.GetComponent<Controller>().GetRefractoryVariables();
+			//Debug.Log("BRBRBRBR");
+		}
+		Debug.Log("A thing");
+		SetNeuronParameterText(refractoryVars);
+	}
+
+	public void SetNeuronParameterText(float[] refractoryVars) {
+		Text restThresh = GameObject.Find("PlaceholderRest").GetComponent<Text>();
+		restThresh.text = refractoryVars[0].ToString();  //neuron.GetComponent<Controller>().GetThreshold().ToString();
+		Text recoveryThresh = GameObject.Find("PlaceholderRecovery").GetComponent<Text>();
+		recoveryThresh.text = refractoryVars[1].ToString();  //neuron.GetComponent<Controller>().GetHighThreshold().ToString();
+		Text absPd = GameObject.Find("PlaceholderAbsolute").GetComponent<Text>();
+		absPd.text = refractoryVars[2].ToString();  //neuron.GetComponent<Controller>().GetAbsRefractoryPd().ToString();
+		Text relPd = GameObject.Find("PlaceholderRelative").GetComponent<Text>();
+		relPd.text = refractoryVars[3].ToString();  //neuron.GetComponent<Controller>().GetRelRefractoryPd().ToString();
+
+		//Reset text
+		GameObject.Find("TextRest").GetComponent<Text>().text = string.Empty;
+		GameObject.Find("TextRecovery").GetComponent<Text>().text = string.Empty;
+		GameObject.Find("TextAbsolute").GetComponent<Text>().text = string.Empty;
+		GameObject.Find("TextRelative").GetComponent<Text>().text = string.Empty;
+		GameObject.Find("RestingThresholdInput").GetComponent<InputField>().text = string.Empty;
+		GameObject.Find("RecoveryThresholdInput").GetComponent<InputField>().text = string.Empty;
+		GameObject.Find("AbsoluteRefractoryPeriodInput").GetComponent<InputField>().text = string.Empty;
+		GameObject.Find("RelativeRefractoryPeriodInput").GetComponent<InputField>().text = string.Empty;
+	}
+
 }

@@ -53,11 +53,11 @@ public class TableSpawnNetworkManagerHUD : MonoBehaviour {
 					//Make sure seat not taken
 					TableSpawnNetworkManager tableManager = manager as TableSpawnNetworkManager;
 					if (tableManager != null) {
-						if (tableManager.SeatIsOccupied()) {  //TODO: This doesn't quite work.  Need to check this ON SERVER.
+						//if (tableManager.SeatIsOccupied()) {  //TODO: This doesn't quite work.  Need to check this ON SERVER.
 															  //Seat is occupied, do not connect
-							tableManager.ShowLoginError();
-							return;
-						}
+							//tableManager.ShowLoginError();
+							//return;
+						//}
 					}
 					manager.StartClient();
 				}

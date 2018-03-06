@@ -151,7 +151,7 @@ public class ConnectionManager : NetworkBehaviour {
 		lr.SetPosition(0, sensor.transform.position);
 		lr.SetPosition(1, neuron.transform.position);
 
-		sensor.GetComponent<SensorConnector>().AttachToSensor(neuron.GetComponent<Controller>());
+		sensor.GetComponent<SensorConnector>().AttachToSensor(neuron.GetComponent<Controller>()); //TODO: Causing issues loading.
 	}
 
 	public void MuscleConnection(GameObject neuron, GameObject muscle) {

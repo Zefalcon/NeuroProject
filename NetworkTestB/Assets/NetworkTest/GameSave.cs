@@ -336,24 +336,25 @@ public static class GameSave {
 	static List<GameObject> muscleConnectionsToReset = new List<GameObject>();
 
 	public static void SaveGame(bool backup) {
-		if (!Directory.Exists("Saves")) {
-			Directory.CreateDirectory("Saves");
+		string persistantPath = Application.persistentDataPath;
+		if (!Directory.Exists(persistantPath + "/Saves")) {
+			Directory.CreateDirectory(persistantPath + "/Saves");
 		}
 
 		if (backup) {
 			//Save game with backup
-			if (File.Exists("Saves/backup.txt")) {
+			if (File.Exists(persistantPath + "/Saves/backup.txt")) {
 				//Save file already exists.  Inform user (TODO) and write over
-				File.Delete("Saves/backup.txt");
+				File.Delete(persistantPath + "/Saves/backup.txt");
 			}
-			CreateSaveFile("Saves/backup.txt");
+			CreateSaveFile(persistantPath + "/Saves/backup.txt");
 		}
 
 		//Save game to regular file
-		if (File.Exists("Saves/save.txt")) {
-			File.Delete("Saves/save.txt");
+		if (File.Exists(persistantPath + "/Saves/save.txt")) {
+			File.Delete(persistantPath + "/Saves/save.txt");
 		}
-		CreateSaveFile("Saves/save.txt");
+		CreateSaveFile(persistantPath + "/Saves/save.txt");
 		Debug.Log("Game Saved!");
 		if (backup) {
 			Debug.Log("Backup Created!");
@@ -443,11 +444,13 @@ public static class GameSave {
 	}
 
 	public static void LoadGame() {
-		LoadGame("Saves/save.txt");
+		string persistantPath = Application.persistentDataPath;
+		LoadGame(persistantPath + "/Saves/save.txt");
 	}
 
 	public static void LoadBackup() {
-		LoadGame("Saves/backup.txt");
+		string persistantPath = Application.persistentDataPath;
+		LoadGame(persistantPath + "/Saves/backup.txt");
 	}
 
 	public static void LoadGame(string file) {
